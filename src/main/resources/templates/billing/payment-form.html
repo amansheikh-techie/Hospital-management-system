@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="'Record Payment – ' + ${bill.billNumber}">Record Payment</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Custom stylesheet -->
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+<!-- Sidebar & Topbar fragments -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="main-content">
+
+    <!-- Flash & General Error Messages -->
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}">Validation error occurred.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a th:href="@{/bills}" class="text-decoration-none">Billing</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/bills/{id}(id=${bill.id})}" class="text-decoration-none" th:text="${bill.billNumber}">INV-001</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Record Payment</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-4">
+        <h4 class="text-dark fw-bold mb-1">
+            <i class="bi bi-credit-card-2-front-fill text-success me-2"></i>Record Payment Transaction
+        </h4>
+        <p class="text-muted small mb-0">
+            Process full or partial payments securely with atomic balance updates.
+        </p>
+    </div>
+
+    <!-- Invoice Summary Card -->
+    <div class="card border-0 shadow-sm col-12 col-lg-8 mb-4 border-start border-4 border-primary">
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <span class="text-muted small d-block">Invoice Number</span>
+                    <span class="fw-bold fs-6 font-monospace text-dark" th:text="${bill.billNumber}">INV-20261017-0001</span>
+                </div>
+                <div class="col-12 col-md-6">
+                    <span class="text-muted small d-block">Patient Name</span>
+                    <span class="fw-bold fs-6 text-dark" th:text="${bill.patient.firstName + ' ' + bill.patient.lastName}">Rohan Gupta</span>
+                </div>
+                <div class="col-4">
+                    <span class="text-muted small d-block">Total Invoiced</span>
+                    <span class="fw-semibold text-dark" th:text="'₹' + ${#numbers.formatDecimal(bill.totalAmount, 1, 2)}">₹700.00</span>
+                </div>
+                <div class="col-4">
+                    <span class="text-muted small d-block">Already Paid</span>
+                    <span class="fw-semibold text-success" th:text="'₹' + ${#numbers.formatDecimal(bill.paidAmount, 1, 2)}">₹0.00</span>
+                </div>
+                <div class="col-4">
+                    <span class="text-muted small d-block">Outstanding Balance</span>
+                    <span class="fw-bold text-danger fs-5" th:text="'₹' + ${#numbers.formatDecimal(bill.balanceAmount, 1, 2)}">₹700.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Entry Form -->
+    <div class="card border-0 shadow-sm col-12 col-lg-8">
+        <div class="card-body p-4">
+            <form th:action="@{/bills/{id}/pay(id=${bill.id})}" method="post">
+
+                <div class="row g-3">
+
+                    <!-- Payment Amount -->
+                    <div class="col-12 col-md-6">
+                        <label for="amount" class="form-label fw-semibold">
+                            Payment Amount (₹) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">₹</span>
+                            <input type="number"
+                                   step="0.01"
+                                   min="0.01"
+                                   th:max="${bill.balanceAmount}"
+                                   id="amount"
+                                   name="amount"
+                                   class="form-control fw-bold fs-5 text-success"
+                                   th:value="${defaultAmount}"
+                                   required />
+                        </div>
+                        <div class="form-text">Maximum payable is outstanding balance (₹<span th:text="${#numbers.formatDecimal(bill.balanceAmount, 1, 2)}">700.00</span>).</div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="col-12 col-md-6">
+                        <label for="paymentMethod" class="form-label fw-semibold">
+                            Payment Method <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-wallet2"></i></span>
+                            <select id="paymentMethod" name="paymentMethod" class="form-select" required>
+                                <option th:each="m : ${paymentMethods}"
+                                        th:value="${m}"
+                                        th:text="${m.displayName}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Reference -->
+                    <div class="col-12 col-md-6">
+                        <label for="transactionReference" class="form-label fw-semibold">
+                            Transaction / UTR Reference
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-hash"></i></span>
+                            <input type="text"
+                                   id="transactionReference"
+                                   name="transactionReference"
+                                   class="form-control"
+                                   placeholder="e.g. UPI Ref #, Cheque #, Card Last 4 digits" />
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="col-12 col-md-6">
+                        <label for="notes" class="form-label fw-semibold">Cashier Remarks / Notes</label>
+                        <input type="text"
+                               id="notes"
+                               name="notes"
+                               class="form-control"
+                               placeholder="e.g. Full settlement received by cashier" />
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-12 mt-4 pt-2 border-top d-flex gap-2 justify-content-end">
+                        <a th:href="@{/bills/{id}(id=${bill.id})}" class="btn btn-outline-secondary px-4">Cancel</a>
+                        <button type="submit" class="btn btn-success px-4 shadow-sm">
+                            <i class="bi bi-check2-circle me-1"></i> Submit Payment
+                        </button>
+                    </div>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom script -->
+<script th:src="@{/js/main.js}"></script>
+<div th:replace="~{fragments/layout :: clock-script}"></div>
+
+</body>
+</html>

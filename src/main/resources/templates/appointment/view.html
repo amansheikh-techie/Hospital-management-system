@@ -42,6 +42,11 @@
                 <i class="bi bi-arrow-left"></i> Back to List
             </a>
 
+            <a th:href="@{/bills/new(appointmentId=${appointment.id})}"
+               class="btn btn-outline-info">
+                <i class="bi bi-receipt me-1"></i> Bill Appointment
+            </a>
+
             <a th:if="${appointment.status.name() != 'CANCELLED'}"
                th:href="@{/appointments/{id}/edit(id=${appointment.id})}"
                class="btn btn-primary">

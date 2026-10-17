@@ -3,6 +3,7 @@ package com.hospital.hospital_management.controller;
 import com.hospital.hospital_management.service.AdmissionService;
 import com.hospital.hospital_management.service.AppointmentService;
 import com.hospital.hospital_management.service.BedService;
+import com.hospital.hospital_management.service.BillingService;
 import com.hospital.hospital_management.service.DoctorService;
 import com.hospital.hospital_management.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,18 +23,21 @@ public class HomeController {
     private final AppointmentService appointmentService;
     private final BedService bedService;
     private final AdmissionService admissionService;
+    private final BillingService billingService;
 
     @Autowired
     public HomeController(PatientService patientService,
                           DoctorService doctorService,
                           AppointmentService appointmentService,
                           BedService bedService,
-                          AdmissionService admissionService) {
+                          AdmissionService admissionService,
+                          BillingService billingService) {
         this.patientService = patientService;
         this.doctorService = doctorService;
         this.appointmentService = appointmentService;
         this.bedService = bedService;
         this.admissionService = admissionService;
+        this.billingService = billingService;
     }
 
     @GetMapping("/")
@@ -47,7 +51,11 @@ public class HomeController {
         model.addAttribute("maintenanceBeds", bedService.getMaintenanceBedCount());
         model.addAttribute("activeAdmissions", admissionService.getActiveAdmissionCount());
         model.addAttribute("todayAdmissions", admissionService.getTodayAdmissionCount());
-        model.addAttribute("pendingBills", 0);
+        model.addAttribute("pendingBills", billingService.getUnpaidBillsCount() + billingService.getPartiallyPaidBillsCount());
+        model.addAttribute("totalBills", billingService.getTotalBillsCount());
+        model.addAttribute("totalBilledAmount", billingService.getTotalBilledAmount());
+        model.addAttribute("totalCollectedAmount", billingService.getTotalCollectedAmount());
+        model.addAttribute("totalOutstandingBalance", billingService.getTotalOutstandingBalance());
         return "index";
     }
 }

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="'Payment – ' + ${payment.paymentReference}">Payment Receipt</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Custom stylesheet -->
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+<!-- Sidebar & Topbar fragments -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="main-content">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a th:href="@{/payments}" class="text-decoration-none">Payments</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${payment.paymentReference}">PAY-001</li>
+        </ol>
+    </nav>
+
+    <!-- Header & Action Row -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h4 class="mb-1 text-dark fw-bold">
+                <i class="bi bi-credit-card-2-front-fill text-success me-2"></i>
+                <span th:text="'Payment ' + ${payment.paymentReference}">Payment Details</span>
+            </h4>
+            <p class="text-muted small mb-0">
+                Processed on <span th:text="${#temporals.format(payment.paymentDate, 'dd MMMM yyyy, hh:mm a')}">17 Oct 2026, 11:00 AM</span>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/bills/{id}(id=${payment.bill.id})}" class="btn btn-outline-primary">
+                <i class="bi bi-receipt"></i> View Invoice
+            </a>
+            <a th:href="@{/bills/{id}/print(id=${payment.bill.id})}" target="_blank" class="btn btn-outline-secondary">
+                <i class="bi bi-printer"></i> Print Receipt
+            </a>
+            <a th:href="@{/payments}" class="btn btn-outline-dark">
+                <i class="bi bi-arrow-left"></i> All Payments
+            </a>
+        </div>
+    </div>
+
+    <!-- Payment Detail Card -->
+    <div class="card border-0 shadow-sm col-12 col-lg-8 border-start border-4 border-success">
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-12 col-md-6">
+                    <span class="text-muted small d-block">Payment Reference</span>
+                    <span class="fw-bold font-monospace fs-5 text-dark" th:text="${payment.paymentReference}">PAY-20261017-0001</span>
+                </div>
+                <div class="col-12 col-md-6">
+                    <span class="text-muted small d-block">Amount Received</span>
+                    <span class="fw-bold text-success fs-4" th:text="'₹' + ${#numbers.formatDecimal(payment.amount, 1, 2)}">₹700.00</span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <span class="text-muted small d-block">Applied to Invoice</span>
+                    <a th:href="@{/bills/{id}(id=${payment.bill.id})}" class="fw-bold font-monospace fs-6 text-primary text-decoration-none"
+                       th:text="${payment.bill.billNumber}">INV-20261017-0001</a>
+                </div>
+                <div class="col-12 col-md-6">
+                    <span class="text-muted small d-block">Billed Patient</span>
+                    <span class="fw-bold fs-6 text-dark" th:text="${payment.bill.patient.firstName + ' ' + payment.bill.patient.lastName}">Rohan Gupta</span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <span class="text-muted small d-block">Payment Mode</span>
+                    <span class="badge bg-light text-dark border fs-6 px-3 py-1" th:text="${payment.paymentMethod.displayName}">Cash</span>
+                </div>
+                <div class="col-12 col-md-6">
+                    <span class="text-muted small d-block">Transaction / Reference ID</span>
+                    <span class="fw-semibold text-dark" th:text="${payment.transactionReference != null and !payment.transactionReference.isEmpty() ? payment.transactionReference : '—'}">—</span>
+                </div>
+
+                <div class="col-12" th:if="${payment.notes != null and !payment.notes.isEmpty()}">
+                    <span class="text-muted small d-block">Notes</span>
+                    <p class="mb-0 bg-light p-2 rounded text-dark" th:text="${payment.notes}">Notes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom script -->
+<script th:src="@{/js/main.js}"></script>
+<div th:replace="~{fragments/layout :: clock-script}"></div>
+
+</body>
+</html>

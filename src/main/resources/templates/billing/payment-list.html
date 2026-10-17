@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payment Transactions – Hospital Management System</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Custom stylesheet -->
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+<!-- Sidebar & Topbar fragments -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="main-content">
+
+    <!-- Flash Messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMessage}">Operation completed successfully.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}">An error occurred.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Header & Action Row -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+            <h4 class="mb-1 text-dark fw-bold">
+                <i class="bi bi-credit-card-2-front-fill text-success me-2"></i>Payment Transactions
+            </h4>
+            <p class="text-muted small mb-0">
+                Total Collections: <span class="badge bg-success rounded-pill px-2" th:text="'₹' + ${#numbers.formatDecimal(totalCollectedAmount, 1, 2)}">₹0.00</span>
+            </p>
+        </div>
+        <div>
+            <a th:href="@{/bills}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm">
+                <i class="bi bi-receipt"></i> Invoices Directory
+            </a>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link text-secondary" th:href="@{/bills}">
+                <i class="bi bi-receipt me-1"></i> Invoices
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active fw-semibold" aria-current="page" th:href="@{/payments}">
+                <i class="bi bi-credit-card-2-front me-1"></i> Payment Transactions
+            </a>
+        </li>
+    </ul>
+
+    <!-- Payments Table Card -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th class="ps-3" style="width: 160px;">Payment Ref</th>
+                        <th>Invoice #</th>
+                        <th>Patient</th>
+                        <th>Payment Date</th>
+                        <th>Method</th>
+                        <th>Txn Ref / Details</th>
+                        <th class="text-end">Amount Paid</th>
+                        <th class="text-end pe-3" style="width: 120px;">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(payments)}">
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-credit-card display-6 d-block mb-2 text-secondary opacity-50"></i>
+                            <span class="fw-semibold">No payments recorded yet.</span>
+                            <p class="small text-muted mb-0">Payments recorded against open invoices will appear here.</p>
+                        </td>
+                    </tr>
+                    <tr th:each="p : ${payments}">
+                        <td class="ps-3">
+                            <span class="fw-bold font-monospace text-dark" th:text="${p.paymentReference}">PAY-20261017-0001</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/bills/{id}(id=${p.bill.id})}" class="text-decoration-none font-monospace fw-semibold"
+                               th:text="${p.bill.billNumber}">
+                                INV-20261017-0001
+                            </a>
+                        </td>
+                        <td>
+                            <a th:href="@{/patients/{id}(id=${p.bill.patient.id})}" class="text-decoration-none fw-semibold text-dark"
+                               th:text="${p.bill.patient.firstName + ' ' + p.bill.patient.lastName}">
+                                Rohan Gupta
+                            </a>
+                        </td>
+                        <td>
+                            <span class="text-dark fw-semibold" th:text="${#temporals.format(p.paymentDate, 'dd MMM yyyy')}">17 Oct 2026</span>
+                            <div class="text-muted small" th:text="${#temporals.format(p.paymentDate, 'hh:mm a')}">10:45 AM</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border" th:text="${p.paymentMethod.displayName}">Cash</span>
+                        </td>
+                        <td>
+                            <span th:text="${p.transactionReference != null and !p.transactionReference.isEmpty() ? p.transactionReference : '—'}">—</span>
+                        </td>
+                        <td class="text-end fw-bold text-success fs-6" th:text="'₹' + ${#numbers.formatDecimal(p.amount, 1, 2)}">
+                            ₹700.00
+                        </td>
+                        <td class="text-end pe-3">
+                            <div class="d-inline-flex gap-1">
+                                <a th:href="@{/payments/{id}(id=${p.id})}" class="btn btn-sm btn-outline-primary" title="View Transaction">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a th:href="@{/bills/{id}/print(id=${p.bill.id})}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Print Receipt">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom script -->
+<script th:src="@{/js/main.js}"></script>
+<div th:replace="~{fragments/layout :: clock-script}"></div>
+
+</body>
+</html>

@@ -123,6 +123,30 @@
         </div>
     </div>
 
+    <!-- Financial Overview Summary -->
+    <div class="card border-0 shadow-sm mb-4 bg-light">
+        <div class="card-body p-3">
+            <div class="row g-3 align-items-center text-center text-md-start">
+                <div class="col-12 col-md-3">
+                    <span class="text-muted small d-block"><i class="bi bi-file-earmark-text me-1"></i>Total Invoices</span>
+                    <span class="fw-bold fs-5 text-dark" th:text="${totalBills}">0</span>
+                </div>
+                <div class="col-12 col-md-3">
+                    <span class="text-muted small d-block"><i class="bi bi-cash-stack me-1 text-primary"></i>Total Billed</span>
+                    <span class="fw-bold fs-5 text-primary" th:text="'₹' + ${#numbers.formatDecimal(totalBilledAmount, 1, 2)}">₹0.00</span>
+                </div>
+                <div class="col-12 col-md-3">
+                    <span class="text-muted small d-block"><i class="bi bi-check2-circle me-1 text-success"></i>Total Collected</span>
+                    <span class="fw-bold fs-5 text-success" th:text="'₹' + ${#numbers.formatDecimal(totalCollectedAmount, 1, 2)}">₹0.00</span>
+                </div>
+                <div class="col-12 col-md-3">
+                    <span class="text-muted small d-block"><i class="bi bi-exclamation-circle me-1 text-danger"></i>Outstanding Balance</span>
+                    <span class="fw-bold fs-5 text-danger" th:text="'₹' + ${#numbers.formatDecimal(totalOutstandingBalance, 1, 2)}">₹0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Actions -->
     <h5 class="section-title"><i class="bi bi-lightning-charge me-1"></i> Quick Actions</h5>
 
