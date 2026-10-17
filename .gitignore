@@ -19,6 +19,8 @@ target/
 logs/
 temp/
 tmp/
+__pycache__/
+*.py[cod]
 
 # Secrets and local environment files
 .env
