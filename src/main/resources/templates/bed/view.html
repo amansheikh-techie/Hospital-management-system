@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="'Bed Details – ' + ${bed.bedNumber}">Bed Details</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Custom stylesheet -->
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+<!-- Sidebar & Topbar fragments -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="main-content">
+
+    <!-- Flash Messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMessage}">Operation completed successfully.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}">An error occurred.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a th:href="@{/beds}" class="text-decoration-none">Beds</a></li>
+            <li class="breadcrumb-item active" aria-current="page" th:text="${bed.bedNumber}">B-101</li>
+        </ol>
+    </nav>
+
+    <!-- Header & Action Row -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h4 class="mb-1 text-dark fw-bold">
+                <i class="bi bi-door-open-fill text-primary me-2"></i>
+                <span th:text="'Bed ' + ${bed.bedNumber} + ' – ' + ${bed.ward}">Bed Details</span>
+            </h4>
+            <p class="text-muted small mb-0">
+                Registered on <span th:text="${#temporals.format(bed.createdAt, 'dd MMM yyyy, hh:mm a')}">01 Jan 2026</span>
+            </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <!-- Admit patient if Available -->
+            <a th:if="${bed.status.name() == 'AVAILABLE'}"
+               th:href="@{/admissions/new(bedId=${bed.id})}"
+               class="btn btn-success d-inline-flex align-items-center gap-1 shadow-sm">
+                <i class="bi bi-box-arrow-in-right"></i> Admit Patient
+            </a>
+
+            <!-- Discharge if Occupied -->
+            <a th:if="${activeAdmission != null}"
+               th:href="@{/admissions/{id}/discharge(id=${activeAdmission.id})}"
+               class="btn btn-warning text-dark d-inline-flex align-items-center gap-1 shadow-sm">
+                <i class="bi bi-box-arrow-right"></i> Discharge Patient
+            </a>
+
+            <!-- Edit Bed -->
+            <a th:href="@{/beds/{id}/edit(id=${bed.id})}"
+               class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm">
+                <i class="bi bi-pencil"></i> Edit Bed
+            </a>
+
+            <!-- Back to Beds -->
+            <a th:href="@{/beds}" class="btn btn-outline-dark d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> All Beds
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Bed Specification Card -->
+        <div class="col-12 col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-info-circle text-primary me-1"></i> Bed Specifications
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Status:</span>
+                        <span th:if="${bed.status.name() == 'AVAILABLE'}" class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fs-6">
+                            <i class="bi bi-check-circle-fill me-1"></i>Available
+                        </span>
+                        <span th:if="${bed.status.name() == 'OCCUPIED'}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fs-6">
+                            <i class="bi bi-person-fill me-1"></i>Occupied
+                        </span>
+                        <span th:if="${bed.status.name() == 'MAINTENANCE'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2 fs-6">
+                            <i class="bi bi-tools me-1"></i>Maintenance
+                        </span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Bed Code</span>
+                            <span class="fw-bold font-monospace fs-5 text-dark" th:text="${bed.bedNumber}">B-101</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Bed Type</span>
+                            <span class="badge bg-light text-dark border px-2 py-1" th:text="${bed.bedType.displayName}">General Ward</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Ward / Dept</span>
+                            <span class="fw-semibold text-dark" th:text="${bed.ward}">General Ward A</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Floor / Wing</span>
+                            <span class="fw-semibold text-dark" th:text="${bed.floor != null and !bed.floor.isEmpty() ? bed.floor : '—'}">1st Floor</span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted small d-block">Daily Rate</span>
+                            <span class="fw-bold text-success fs-5" th:text="'₹' + ${#numbers.formatDecimal(bed.dailyCharge, 1, 2)}">₹500.00</span>
+                            <span class="text-muted small">/ day</span>
+                        </div>
+                        <div class="col-12" th:if="${bed.description != null and !bed.description.isEmpty()}">
+                            <span class="text-muted small d-block">Description</span>
+                            <p class="mb-0 text-secondary bg-light p-2 rounded" th:text="${bed.description}">Notes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Occupant Card -->
+        <div class="col-12 col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-person-badge text-info me-1"></i> Current Inpatient Occupant
+                    </h6>
+                    <span th:if="${activeAdmission != null}" class="badge bg-danger">Currently Admitted</span>
+                    <span th:if="${activeAdmission == null}" class="badge bg-secondary">Unoccupied</span>
+                </div>
+                <div class="card-body p-4">
+                    <div th:if="${activeAdmission != null}">
+                        <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3 fs-3 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-bold text-dark">
+                                    <a th:href="@{/patients/{id}(id=${activeAdmission.patient.id})}"
+                                       class="text-decoration-none text-dark"
+                                       th:text="${activeAdmission.patient.firstName + ' ' + activeAdmission.patient.lastName}">
+                                        Rohan Gupta
+                                    </a>
+                                </h5>
+                                <div class="text-muted small">
+                                    Patient ID: #<span th:text="${activeAdmission.patient.id}">1</span>
+                                    &bull; Age: <span th:text="${activeAdmission.patient.age}">35</span>
+                                    &bull; Gender: <span th:text="${activeAdmission.patient.gender}">Male</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <span class="text-muted small d-block">Admission Date &amp; Time</span>
+                                <span class="fw-semibold text-dark" th:text="${#temporals.format(activeAdmission.admissionDate, 'dd MMM yyyy, hh:mm a')}">
+                                    17 Oct 2026, 10:00 AM
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted small d-block">Attending Doctor</span>
+                                <span th:if="${activeAdmission.attendingDoctor != null}" class="fw-semibold text-dark"
+                                      th:text="'Dr. ' + ${activeAdmission.attendingDoctor.firstName} + ' ' + ${activeAdmission.attendingDoctor.lastName}">
+                                    Dr. Aditya Chopra
+                                </span>
+                                <span th:if="${activeAdmission.attendingDoctor == null}" class="text-muted">Not Assigned</span>
+                            </div>
+                            <div class="col-12" th:if="${activeAdmission.admissionReason != null and !activeAdmission.admissionReason.isEmpty()}">
+                                <span class="text-muted small d-block">Admission Reason</span>
+                                <p class="mb-0 bg-light p-2 rounded text-dark" th:text="${activeAdmission.admissionReason}">Observation</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/admissions/{id}(id=${activeAdmission.id})}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-file-text"></i> Full Admission File
+                            </a>
+                            <a th:href="@{/admissions/{id}/discharge(id=${activeAdmission.id})}" class="btn btn-warning btn-sm text-dark">
+                                <i class="bi bi-box-arrow-right"></i> Proceed to Discharge
+                            </a>
+                        </div>
+                    </div>
+
+                    <div th:if="${activeAdmission == null}" class="text-center py-4 text-muted">
+                        <i class="bi bi-check2-circle text-success display-5 d-block mb-2"></i>
+                        <h6 class="fw-semibold text-dark">No patient is currently admitted to this bed.</h6>
+                        <p class="small text-muted mb-3" th:if="${bed.status.name() == 'AVAILABLE'}">
+                            This bed is ready to accommodate a new patient.
+                        </p>
+                        <p class="small text-muted mb-3" th:if="${bed.status.name() == 'MAINTENANCE'}">
+                            This bed is temporarily marked for maintenance.
+                        </p>
+                        <a th:if="${bed.status.name() == 'AVAILABLE'}"
+                           th:href="@{/admissions/new(bedId=${bed.id})}"
+                           class="btn btn-sm btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Admit Patient Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admission History Table -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-clock-history text-secondary me-1"></i> Stay &amp; Admission History for Bed <span th:text="${bed.bedNumber}">B-101</span>
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Admission ID</th>
+                                <th>Patient</th>
+                                <th>Attending Doctor</th>
+                                <th>Admission Date</th>
+                                <th>Discharge Date</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end pe-3">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(admissionHistory)}">
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <span class="small">No historical admissions recorded for this bed yet.</span>
+                                </td>
+                            </tr>
+                            <tr th:each="adm : ${admissionHistory}">
+                                <td class="ps-3 font-monospace fw-semibold" th:text="'#' + ${adm.id}">#1</td>
+                                <td>
+                                    <a th:href="@{/patients/{id}(id=${adm.patient.id})}" class="text-decoration-none fw-semibold text-dark"
+                                       th:text="${adm.patient.firstName + ' ' + adm.patient.lastName}">
+                                        Rohan Gupta
+                                    </a>
+                                </td>
+                                <td>
+                                    <span th:if="${adm.attendingDoctor != null}"
+                                          th:text="'Dr. ' + ${adm.attendingDoctor.firstName} + ' ' + ${adm.attendingDoctor.lastName}">
+                                        Dr. Aditya Chopra
+                                    </span>
+                                    <span th:if="${adm.attendingDoctor == null}" class="text-muted">—</span>
+                                </td>
+                                <td th:text="${#temporals.format(adm.admissionDate, 'dd MMM yyyy, hh:mm a')}">17 Oct 2026, 10:00 AM</td>
+                                <td>
+                                    <span th:if="${adm.dischargeDate != null}" th:text="${#temporals.format(adm.dischargeDate, 'dd MMM yyyy, hh:mm a')}">17 Oct 2026, 05:00 PM</span>
+                                    <span th:if="${adm.dischargeDate == null}" class="badge bg-warning text-dark">Active Stay</span>
+                                </td>
+                                <td class="text-center">
+                                    <span th:if="${adm.status.name() == 'ACTIVE'}" class="badge bg-primary">Active</span>
+                                    <span th:if="${adm.status.name() == 'DISCHARGED'}" class="badge bg-secondary">Discharged</span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <a th:href="@{/admissions/{id}(id=${adm.id})}" class="btn btn-sm btn-outline-primary" title="View Admission">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom script -->
+<script th:src="@{/js/main.js}"></script>
+<div th:replace="~{fragments/layout :: clock-script}"></div>
+
+</body>
+</html>
