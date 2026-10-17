@@ -5,7 +5,6 @@ import com.hospital.hospital_management.model.Appointment;
 import com.hospital.hospital_management.model.Bill;
 import com.hospital.hospital_management.model.BillItem;
 import com.hospital.hospital_management.model.BillStatus;
-import com.hospital.hospital_management.model.Patient;
 import com.hospital.hospital_management.model.Payment;
 import com.hospital.hospital_management.model.PaymentMethod;
 import com.hospital.hospital_management.service.AdmissionService;

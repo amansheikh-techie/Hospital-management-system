@@ -11,8 +11,8 @@
 	<groupId>com.hospital</groupId>
 	<artifactId>hospital_management</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>Hospital Management System</name>
+	<description>Hospital Management System for College PBL</description>
 	<url/>
 	<licenses>
 		<license/>

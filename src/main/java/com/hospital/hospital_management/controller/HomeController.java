@@ -60,5 +60,4 @@ public class HomeController {
         model.addAttribute("totalOutstandingBalance", billingService.getTotalOutstandingBalance());
         return "index";
     }
-
 }
