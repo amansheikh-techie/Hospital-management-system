@@ -55,7 +55,7 @@ public class AuthController {
 
         // Validate security question: "What is your language?" -> answer must be "java"
         if (securityAnswer == null || !securityAnswer.trim().equalsIgnoreCase("java")) {
-            model.addAttribute("errorMessage", "Incorrect security answer! Question: 'What is your language?' (Expected answer: java)");
+            model.addAttribute("errorMessage", "Incorrect security answer. Please try again.");
             model.addAttribute("username", username);
             model.addAttribute("pageTitle", "Reset Password");
             return "auth/forgot-password";
