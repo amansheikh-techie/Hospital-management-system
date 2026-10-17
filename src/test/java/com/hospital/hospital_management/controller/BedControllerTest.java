@@ -1,7 +1,6 @@
 package com.hospital.hospital_management.controller;
 
 import com.hospital.hospital_management.model.Bed;
-import com.hospital.hospital_management.model.BedStatus;
 import com.hospital.hospital_management.model.BedType;
 import com.hospital.hospital_management.service.BedService;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,7 +1,17 @@
 package com.hospital.hospital_management.controller;
 
-import com.hospital.hospital_management.model.*;
-import com.hospital.hospital_management.service.*;
+import com.hospital.hospital_management.model.Admission;
+import com.hospital.hospital_management.model.Appointment;
+import com.hospital.hospital_management.model.Bill;
+import com.hospital.hospital_management.model.BillItem;
+import com.hospital.hospital_management.model.BillStatus;
+import com.hospital.hospital_management.model.Patient;
+import com.hospital.hospital_management.model.Payment;
+import com.hospital.hospital_management.model.PaymentMethod;
+import com.hospital.hospital_management.service.AdmissionService;
+import com.hospital.hospital_management.service.AppointmentService;
+import com.hospital.hospital_management.service.BillingService;
+import com.hospital.hospital_management.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;

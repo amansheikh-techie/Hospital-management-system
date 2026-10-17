@@ -1,7 +1,6 @@
 package com.hospital.hospital_management.controller;
 
 import com.hospital.hospital_management.model.Appointment;
-import com.hospital.hospital_management.model.AppointmentStatus;
 import com.hospital.hospital_management.model.Doctor;
 import com.hospital.hospital_management.model.Patient;
 import com.hospital.hospital_management.model.Role;

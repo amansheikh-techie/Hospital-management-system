@@ -1,6 +1,10 @@
 package com.hospital.hospital_management.controller;
 
-import com.hospital.hospital_management.model.*;
+import com.hospital.hospital_management.model.Bill;
+import com.hospital.hospital_management.model.BillItem;
+import com.hospital.hospital_management.model.Patient;
+import com.hospital.hospital_management.model.Payment;
+import com.hospital.hospital_management.model.PaymentMethod;
 import com.hospital.hospital_management.service.BillingService;
 import com.hospital.hospital_management.service.PatientService;
 import org.junit.jupiter.api.BeforeEach;

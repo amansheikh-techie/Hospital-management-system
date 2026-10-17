@@ -1,7 +1,22 @@
 package com.hospital.hospital_management.service;
 
-import com.hospital.hospital_management.model.*;
-import com.hospital.hospital_management.repository.*;
+import com.hospital.hospital_management.model.Admission;
+import com.hospital.hospital_management.model.AdmissionStatus;
+import com.hospital.hospital_management.model.Appointment;
+import com.hospital.hospital_management.model.Bed;
+import com.hospital.hospital_management.model.BedType;
+import com.hospital.hospital_management.model.Bill;
+import com.hospital.hospital_management.model.BillItem;
+import com.hospital.hospital_management.model.BillStatus;
+import com.hospital.hospital_management.model.Doctor;
+import com.hospital.hospital_management.model.Patient;
+import com.hospital.hospital_management.model.Payment;
+import com.hospital.hospital_management.model.PaymentMethod;
+import com.hospital.hospital_management.repository.AdmissionRepository;
+import com.hospital.hospital_management.repository.AppointmentRepository;
+import com.hospital.hospital_management.repository.BillRepository;
+import com.hospital.hospital_management.repository.PatientRepository;
+import com.hospital.hospital_management.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

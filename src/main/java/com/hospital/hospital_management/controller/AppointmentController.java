@@ -2,8 +2,6 @@ package com.hospital.hospital_management.controller;
 
 import com.hospital.hospital_management.model.Appointment;
 import com.hospital.hospital_management.model.AppointmentStatus;
-import com.hospital.hospital_management.model.Doctor;
-import com.hospital.hospital_management.model.Patient;
 import com.hospital.hospital_management.model.Role;
 import com.hospital.hospital_management.model.User;
 import com.hospital.hospital_management.service.AppointmentService;
@@ -223,7 +221,7 @@ public class AppointmentController {
         }
 
         try {
-            Appointment updated = appointmentService.updateAppointment(id, appointment);
+            appointmentService.updateAppointment(id, appointment);
             redirectAttributes.addFlashAttribute("successMessage",
                     "Appointment #" + id + " updated successfully!");
             return "redirect:/appointments";
