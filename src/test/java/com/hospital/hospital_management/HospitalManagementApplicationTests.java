@@ -35,6 +35,7 @@ class HospitalManagementApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(view().name("index"))
 				.andExpect(model().attributeExists("totalPatients"))
-				.andExpect(model().attributeExists("totalDoctors"));
+				.andExpect(model().attributeExists("totalDoctors"))
+				.andExpect(model().attributeExists("todayAppointments"));
 	}
 }

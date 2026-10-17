@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="${pageTitle != null ? pageTitle : 'Appointment Form'}">Appointment Form – Hospital Management System</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Custom stylesheet -->
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+<!-- Sidebar & Topbar fragments -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="main-content">
+
+    <!-- Breadcrumb & Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/appointments}" class="text-decoration-none">Appointments</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="${pageTitle}">Booking</li>
+                </ol>
+            </nav>
+            <h4 class="mb-0 text-dark fw-bold" th:text="${pageTitle}">Book New Appointment</h4>
+        </div>
+        <a th:href="@{/appointments}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Appointments
+        </a>
+    </div>
+
+    <!-- Error Banner (Conflict / Validation) -->
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-octagon-fill me-2 fs-5 align-middle"></i>
+        <strong class="d-block d-sm-inline">Booking Conflict / Validation Error:</strong>
+        <span th:text="${errorMessage}">Please resolve the issue below.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Appointment Form Card -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form th:action="${appointment.id == null ? '/appointments' : '/appointments/' + appointment.id + '/edit'}"
+                  th:object="${appointment}"
+                  method="post"
+                  novalidate>
+
+                <!-- Hidden ID for edit -->
+                <input type="hidden" th:field="*{id}" />
+
+                <!-- Section: Patient & Doctor Selection -->
+                <h5 class="text-info border-bottom pb-2 mb-3">
+                    <i class="bi bi-people-fill me-2"></i>1. Patient &amp; Doctor Selection
+                </h5>
+
+                <div class="row g-3 mb-4">
+                    <!-- Patient Selection -->
+                    <div class="col-12 col-md-6">
+                        <label for="patient" class="form-label fw-semibold">Select Patient <span class="text-danger">*</span></label>
+                        <select id="patient"
+                                th:field="*{patient.id}"
+                                class="form-select"
+                                th:classappend="${#fields.hasErrors('patient')} ? 'is-invalid' : ''">
+                            <option value="">-- Choose Patient --</option>
+                            <option th:each="p : ${patients}"
+                                    th:value="${p.id}"
+                                    th:text="${p.fullName} + ' (#' + ${p.id} + ' &bull; ' + ${p.contactNumber} + ')'"
+                                    th:selected="${appointment.patient != null and appointment.patient.id == p.id}">
+                                John Doe (#1)
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('patient')}" th:errors="*{patient}">
+                            Please select a patient.
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            Don't see the patient? <a th:href="@{/patients/new}" target="_blank">Register new patient</a>
+                        </small>
+                    </div>
+
+                    <!-- Doctor Selection -->
+                    <div class="col-12 col-md-6">
+                        <label for="doctor" class="form-label fw-semibold">Select Doctor <span class="text-danger">*</span></label>
+                        <select id="doctor"
+                                th:field="*{doctor.id}"
+                                class="form-select"
+                                th:classappend="${#fields.hasErrors('doctor')} ? 'is-invalid' : ''">
+                            <option value="">-- Choose Doctor --</option>
+                            <option th:each="d : ${doctors}"
+                                    th:value="${d.id}"
+                                    th:text="${d.displayName} + ' &bull; ' + ${d.department} + ' (Fee: ₹' + ${#numbers.formatDecimal(d.consultationFee, 1, 0)} + ')'"
+                                    th:selected="${appointment.doctor != null and appointment.doctor.id == d.id}">
+                                Dr. Smith (Cardiology)
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('doctor')}" th:errors="*{doctor}">
+                            Please select a doctor.
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            Don't see the doctor? <a th:href="@{/doctors/new}" target="_blank">Add new doctor</a>
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Section: Schedule Date & Time Interval -->
+                <h5 class="text-info border-bottom pb-2 mb-3">
+                    <i class="bi bi-clock-history me-2"></i>2. Date &amp; Time Slot (Conflict Checked)
+                </h5>
+
+                <div class="row g-3 mb-4">
+                    <!-- Date -->
+                    <div class="col-12 col-md-4">
+                        <label for="appointmentDate" class="form-label fw-semibold">Appointment Date <span class="text-danger">*</span></label>
+                        <input type="date"
+                               id="appointmentDate"
+                               th:field="*{appointmentDate}"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('appointmentDate')} ? 'is-invalid' : ''" />
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('appointmentDate')}" th:errors="*{appointmentDate}">
+                            Valid appointment date is required.
+                        </div>
+                    </div>
+
+                    <!-- Start Time -->
+                    <div class="col-12 col-md-4">
+                        <label for="startTime" class="form-label fw-semibold">Start Time <span class="text-danger">*</span></label>
+                        <input type="time"
+                               id="startTime"
+                               th:field="*{startTime}"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('startTime')} ? 'is-invalid' : ''" />
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}">
+                            Start time is required.
+                        </div>
+                    </div>
+
+                    <!-- End Time -->
+                    <div class="col-12 col-md-4">
+                        <label for="endTime" class="form-label fw-semibold">End Time <span class="text-danger">*</span></label>
+                        <input type="time"
+                               id="endTime"
+                               th:field="*{endTime}"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('endTime')} ? 'is-invalid' : ''" />
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}">
+                            End time is required.
+                        </div>
+                        <small class="text-muted">Must be after start time</small>
+                    </div>
+
+                    <!-- Status (only when editing) -->
+                    <div class="col-12 col-md-4" th:if="${appointment.id != null}">
+                        <label for="status" class="form-label fw-semibold">Status</label>
+                        <select id="status" th:field="*{status}" class="form-select">
+                            <option th:each="st : ${statuses}"
+                                    th:value="${st}"
+                                    th:text="${st.displayName}">
+                                Scheduled
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Reason -->
+                    <div class="col-12">
+                        <label for="reason" class="form-label fw-semibold">Reason for Visit / Symptoms <span class="text-danger">*</span></label>
+                        <textarea id="reason"
+                                  th:field="*{reason}"
+                                  rows="3"
+                                  class="form-control"
+                                  th:classappend="${#fields.hasErrors('reason')} ? 'is-invalid' : ''"
+                                  placeholder="e.g. Routine cardiac follow-up, chest discomfort, prescription renewal..."></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}">
+                            Reason for appointment is required.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Alert on Conflict Prevention -->
+                <div class="alert alert-light border small text-muted mb-4">
+                    <i class="bi bi-shield-check text-success me-1 fs-6"></i>
+                    <strong>Conflict Prevention Active:</strong> The system automatically verifies that the selected doctor has no overlapping active appointment on this date between the start and end times before saving.
+                </div>
+
+                <!-- Submit & Cancel Buttons -->
+                <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                    <a th:href="@{/appointments}" class="btn btn-secondary px-4">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-info text-white px-4 shadow-sm">
+                        <i class="bi bi-calendar-check-fill me-1"></i>
+                        <span th:text="${appointment.id == null ? 'Book Appointment' : 'Save Changes'}">Submit</span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+<div th:replace="~{fragments/layout :: clock-script}"></div>
+
+</body>
+</html>
