@@ -3,6 +3,7 @@ package com.hospital.hospital_management.controller;
 import com.hospital.hospital_management.model.*;
 import com.hospital.hospital_management.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,7 @@ public class BillController {
      * Lists bills with search and filtering, plus live financial summary counters.
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF', 'RECEPTIONIST', 'DOCTOR')")
     public String listBills(@RequestParam(value = "query", required = false) String query,
                             @RequestParam(value = "status", required = false) BillStatus status,
                             Model model) {
@@ -62,6 +64,7 @@ public class BillController {
      * Shows form to create a new invoice (manual, or linked to appointment/admission).
      */
     @GetMapping("/new")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
     public String showCreateForm(@RequestParam(value = "patientId", required = false) Long patientId,
                                  @RequestParam(value = "appointmentId", required = false) Long appointmentId,
                                  @RequestParam(value = "admissionId", required = false) Long admissionId,
@@ -99,6 +102,7 @@ public class BillController {
      * Quick-generate invoice from an Appointment.
      */
     @PostMapping("/from-appointment")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
     public String generateFromAppointment(@RequestParam("appointmentId") Long appointmentId,
                                           @RequestParam(value = "discountAmount", required = false) BigDecimal discountAmount,
                                           @RequestParam(value = "taxAmount", required = false) BigDecimal taxAmount,
@@ -119,6 +123,7 @@ public class BillController {
      * Quick-generate invoice from an Admission.
      */
     @PostMapping("/from-admission")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
     public String generateFromAdmission(@RequestParam("admissionId") Long admissionId,
                                         @RequestParam(value = "discountAmount", required = false) BigDecimal discountAmount,
                                         @RequestParam(value = "taxAmount", required = false) BigDecimal taxAmount,
@@ -139,6 +144,7 @@ public class BillController {
      * Handles manual bill creation with custom line items.
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
     public String createManualBill(@RequestParam(value = "patientId", required = false) Long patientId,
                                    @RequestParam(value = "itemDescriptions", required = false) List<String> descriptions,
                                    @RequestParam(value = "itemQuantities", required = false) List<Integer> quantities,
@@ -195,6 +201,7 @@ public class BillController {
      * Views bill details including line items, payments history, balance, and settlement status.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF', 'RECEPTIONIST', 'DOCTOR')")
     public String viewBill(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Bill> billOpt = billingService.getBillById(id);
         if (billOpt.isEmpty()) {
@@ -216,6 +223,7 @@ public class BillController {
      * Printable view of an invoice for patient receipt / record keeping.
      */
     @GetMapping("/{id}/print")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF', 'RECEPTIONIST', 'DOCTOR')")
     public String printBill(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Bill> billOpt = billingService.getBillById(id);
         if (billOpt.isEmpty()) {

@@ -61,4 +61,22 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
 
     @Query("SELECT COALESCE(SUM(b.balanceAmount), 0) FROM Bill b")
     BigDecimal sumTotalOutstandingBalance();
+
+    /**
+     * Report query with date/time range filtering.
+     */
+    @Query("SELECT b FROM Bill b WHERE " +
+           "(:startDateTime IS NULL OR b.billDate >= :startDateTime) AND " +
+           "(:endDateTime IS NULL OR b.billDate <= :endDateTime) " +
+           "ORDER BY b.billDate DESC")
+    List<Bill> findBillsForReport(
+            @Param("startDateTime") java.time.LocalDateTime startDateTime,
+            @Param("endDateTime") java.time.LocalDateTime endDateTime);
+
+    @Query("SELECT COALESCE(SUM(b.totalAmount), 0) FROM Bill b WHERE " +
+           "(:startDateTime IS NULL OR b.billDate >= :startDateTime) AND " +
+           "(:endDateTime IS NULL OR b.billDate <= :endDateTime)")
+    BigDecimal sumTotalBilledAmountBetween(
+            @Param("startDateTime") java.time.LocalDateTime startDateTime,
+            @Param("endDateTime") java.time.LocalDateTime endDateTime);
 }

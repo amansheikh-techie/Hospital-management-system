@@ -72,4 +72,19 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
      * Count appointments by status.
      */
     long countByStatus(AppointmentStatus status);
+
+    /**
+     * Report query with date range, optional doctor, and optional status filtering.
+     */
+    @Query("SELECT a FROM Appointment a WHERE " +
+           "(:startDate IS NULL OR a.appointmentDate >= :startDate) AND " +
+           "(:endDate IS NULL OR a.appointmentDate <= :endDate) AND " +
+           "(:doctorId IS NULL OR a.doctor.id = :doctorId) AND " +
+           "(:status IS NULL OR a.status = :status) " +
+           "ORDER BY a.appointmentDate DESC, a.startTime DESC")
+    List<Appointment> findAppointmentsForReport(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("doctorId") Long doctorId,
+            @Param("status") AppointmentStatus status);
 }

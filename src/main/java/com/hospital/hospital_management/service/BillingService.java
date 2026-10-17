@@ -350,4 +350,9 @@ public class BillingService {
     public long getPaidBillsCount() {
         return billRepository.countByStatus(BillStatus.PAID);
     }
+
+    @Transactional(readOnly = true)
+    public long getTotalPaymentsCount() {
+        return paymentRepository.count();
+    }
 }

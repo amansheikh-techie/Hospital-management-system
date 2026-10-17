@@ -4,6 +4,7 @@ import com.hospital.hospital_management.model.Doctor;
 import com.hospital.hospital_management.service.DoctorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -31,6 +32,7 @@ public class DoctorController {
      * Display list of doctors with optional search filter.
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'BILLING_STAFF')")
     public String listDoctors(@RequestParam(value = "keyword", required = false) String keyword, Model model) {
         List<Doctor> doctors;
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -41,6 +43,7 @@ public class DoctorController {
         }
         model.addAttribute("doctors", doctors);
         model.addAttribute("totalCount", doctorService.getTotalDoctorCount());
+        model.addAttribute("pageTitle", "Doctors");
         return "doctor/list";
     }
 
@@ -48,6 +51,7 @@ public class DoctorController {
      * Show registration form for a new doctor.
      */
     @GetMapping("/new")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showRegistrationForm(Model model) {
         model.addAttribute("doctor", new Doctor());
         model.addAttribute("pageTitle", "Add New Doctor");
@@ -58,6 +62,7 @@ public class DoctorController {
      * Process new doctor registration.
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String registerDoctor(@Valid @ModelAttribute("doctor") Doctor doctor,
                                  BindingResult result,
                                  Model model,
@@ -77,10 +82,12 @@ public class DoctorController {
      * View complete details for a specific doctor.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'BILLING_STAFF')")
     public String viewDoctorDetails(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         return doctorService.getDoctorById(id)
                 .map(doctor -> {
                     model.addAttribute("doctor", doctor);
+                    model.addAttribute("pageTitle", "Doctor Profile");
                     return "doctor/view";
                 })
                 .orElseGet(() -> {
@@ -93,6 +100,7 @@ public class DoctorController {
      * Show form to edit an existing doctor.
      */
     @GetMapping("/{id}/edit")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showEditForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         return doctorService.getDoctorById(id)
                 .map(doctor -> {
@@ -110,6 +118,7 @@ public class DoctorController {
      * Process doctor update submission.
      */
     @PostMapping("/{id}/edit")
+    @PreAuthorize("hasRole('ADMIN')")
     public String updateDoctor(@PathVariable("id") Long id,
                                @Valid @ModelAttribute("doctor") Doctor doctor,
                                BindingResult result,
@@ -135,6 +144,7 @@ public class DoctorController {
      * Safely delete a doctor record.
      */
     @PostMapping("/{id}/delete")
+    @PreAuthorize("hasRole('ADMIN')")
     public String deleteDoctor(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         boolean deleted = doctorService.deleteDoctor(id);
         if (deleted) {

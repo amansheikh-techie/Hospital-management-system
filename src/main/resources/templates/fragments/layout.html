@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <!--
     layout.html – Reusable layout fragment
     Every page includes this via th:replace so that the sidebar
@@ -56,10 +56,22 @@
                 <span>Billing</span>
             </a>
         </li>
-        <li>
+        <li sec:authorize="hasAnyRole('ADMIN', 'BILLING_STAFF')">
             <a th:href="@{/payments}">
                 <i class="bi bi-credit-card-2-front"></i>
                 <span>Payments</span>
+            </a>
+        </li>
+        <li>
+            <a th:href="@{/reports}">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>Reports</span>
+            </a>
+        </li>
+        <li sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/users}">
+                <i class="bi bi-person-gear"></i>
+                <span>Staff Accounts</span>
             </a>
         </li>
     </ul>
@@ -73,8 +85,25 @@
         </button>
         <h1 th:text="${pageTitle != null ? pageTitle : 'Dashboard'}">Dashboard</h1>
     </div>
-    <div class="topbar-right">
-        <span class="text-muted" style="font-size:.85rem;">
+    <div class="topbar-right d-flex align-items-center gap-3">
+        <!-- Logged-in User Badge & Logout -->
+        <div class="d-flex align-items-center gap-2" sec:authorize="isAuthenticated()">
+            <div class="d-none d-md-flex flex-column text-end">
+                <span class="fw-semibold text-dark small" sec:authentication="name">User</span>
+                <span sec:authorize="hasRole('ADMIN')" class="badge bg-danger rounded-pill" style="font-size: 0.65rem;">ADMIN</span>
+                <span sec:authorize="hasRole('DOCTOR')" class="badge bg-primary rounded-pill" style="font-size: 0.65rem;">DOCTOR</span>
+                <span sec:authorize="hasRole('RECEPTIONIST')" class="badge bg-info text-dark rounded-pill" style="font-size: 0.65rem;">RECEPTIONIST</span>
+                <span sec:authorize="hasRole('BILLING_STAFF')" class="badge bg-success rounded-pill" style="font-size: 0.65rem;">BILLING</span>
+            </div>
+            <form th:action="@{/logout}" method="post" class="d-inline m-0">
+                <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 shadow-sm rounded-pill px-2 py-1" title="Sign Out">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="d-none d-sm-inline small">Sign Out</span>
+                </button>
+            </form>
+        </div>
+
+        <span class="text-muted d-none d-sm-inline" style="font-size:.85rem;">
             <i class="bi bi-clock me-1"></i>
             <span id="liveClock"></span>
         </span>

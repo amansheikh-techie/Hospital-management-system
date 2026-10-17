@@ -13,6 +13,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -41,7 +43,7 @@ class BedControllerTest {
 
     @Test
     void testListBedsPageLoads() throws Exception {
-        mockMvc.perform(get("/beds"))
+        mockMvc.perform(get("/beds").with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("bed/list"))
                 .andExpect(model().attributeExists("beds"))
@@ -52,7 +54,7 @@ class BedControllerTest {
 
     @Test
     void testSearchAndFilterBeds() throws Exception {
-        mockMvc.perform(get("/beds")
+        mockMvc.perform(get("/beds").with(user("receptionist").roles("RECEPTIONIST"))
                         .param("query", savedBedNumber)
                         .param("ward", "Cardiology Ward")
                         .param("status", "AVAILABLE"))
@@ -63,7 +65,7 @@ class BedControllerTest {
 
     @Test
     void testShowCreateBedForm() throws Exception {
-        mockMvc.perform(get("/beds/new"))
+        mockMvc.perform(get("/beds/new").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("bed/form"))
                 .andExpect(model().attributeExists("bed"))
@@ -74,7 +76,7 @@ class BedControllerTest {
     @Test
     void testCreateBedSuccess() throws Exception {
         String newBedNumber = "NEW-" + System.currentTimeMillis() % 100000;
-        mockMvc.perform(post("/beds")
+        mockMvc.perform(post("/beds").with(user("admin").roles("ADMIN")).with(csrf())
                         .param("bedNumber", newBedNumber)
                         .param("ward", "General Ward X")
                         .param("bedType", "GENERAL")
@@ -88,7 +90,7 @@ class BedControllerTest {
 
     @Test
     void testCreateBedValidationFailure() throws Exception {
-        mockMvc.perform(post("/beds")
+        mockMvc.perform(post("/beds").with(user("admin").roles("ADMIN")).with(csrf())
                         .param("bedNumber", "")
                         .param("ward", ""))
                 .andExpect(status().isOk())
@@ -98,7 +100,7 @@ class BedControllerTest {
 
     @Test
     void testViewBedDetails() throws Exception {
-        mockMvc.perform(get("/beds/{id}", savedBedId))
+        mockMvc.perform(get("/beds/{id}", savedBedId).with(user("doctor").roles("DOCTOR")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("bed/view"))
                 .andExpect(model().attributeExists("bed"))
@@ -107,7 +109,7 @@ class BedControllerTest {
 
     @Test
     void testViewBedNotFound() throws Exception {
-        mockMvc.perform(get("/beds/{id}", 999999L))
+        mockMvc.perform(get("/beds/{id}", 999999L).with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/beds"))
                 .andExpect(flash().attributeExists("errorMessage"));
@@ -115,7 +117,7 @@ class BedControllerTest {
 
     @Test
     void testShowEditBedForm() throws Exception {
-        mockMvc.perform(get("/beds/{id}/edit", savedBedId))
+        mockMvc.perform(get("/beds/{id}/edit", savedBedId).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("bed/form"))
                 .andExpect(model().attributeExists("bed"));
@@ -123,7 +125,7 @@ class BedControllerTest {
 
     @Test
     void testUpdateBedSuccess() throws Exception {
-        mockMvc.perform(post("/beds/{id}", savedBedId)
+        mockMvc.perform(post("/beds/{id}", savedBedId).with(user("admin").roles("ADMIN")).with(csrf())
                         .param("bedNumber", savedBedNumber)
                         .param("ward", "Updated Ward")
                         .param("bedType", "ICU")
@@ -139,13 +141,13 @@ class BedControllerTest {
     @Test
     void testSetMaintenanceAndAvailableToggle() throws Exception {
         // 1. Mark Maintenance
-        mockMvc.perform(post("/beds/{id}/maintenance", savedBedId))
+        mockMvc.perform(post("/beds/{id}/maintenance", savedBedId).with(user("admin").roles("ADMIN")).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/beds"))
                 .andExpect(flash().attributeExists("successMessage"));
 
         // 2. Return to Available
-        mockMvc.perform(post("/beds/{id}/available", savedBedId))
+        mockMvc.perform(post("/beds/{id}/available", savedBedId).with(user("admin").roles("ADMIN")).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/beds"))
                 .andExpect(flash().attributeExists("successMessage"));
@@ -157,9 +159,38 @@ class BedControllerTest {
         Bed toDelete = bedService.createBed(new Bed(tempBedNumber, "Temp Ward", BedType.GENERAL, "1st",
                 BigDecimal.ZERO, ""));
 
-        mockMvc.perform(post("/beds/{id}/delete", toDelete.getId()))
+        mockMvc.perform(post("/beds/{id}/delete", toDelete.getId()).with(user("admin").roles("ADMIN")).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/beds"))
                 .andExpect(flash().attributeExists("successMessage"));
+    }
+
+    // --- Negative Authorization Tests ---
+
+    @Test
+    void testUnauthenticatedUserRedirectedToLogin() throws Exception {
+        mockMvc.perform(get("/beds"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void testReceptionistCannotAccessCreateBedForm() throws Exception {
+        mockMvc.perform(get("/beds/new").with(user("receptionist").roles("RECEPTIONIST")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testBillingStaffCannotCreateBed() throws Exception {
+        mockMvc.perform(post("/beds").with(user("billing").roles("BILLING_STAFF")).with(csrf())
+                        .param("bedNumber", "FORBIDDEN-1")
+                        .param("ward", "General"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testReceptionistCannotDeleteBed() throws Exception {
+        mockMvc.perform(post("/beds/{id}/delete", savedBedId).with(user("receptionist").roles("RECEPTIONIST")).with(csrf()))
+                .andExpect(status().isForbidden());
     }
 }

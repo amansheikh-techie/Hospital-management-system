@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -41,10 +41,10 @@
             <a th:href="@{/patients}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Back to List
             </a>
-            <a th:href="@{/patients/{id}/edit(id=${patient.id})}" class="btn btn-primary">
+            <a sec:authorize="hasAnyRole('ADMIN', 'RECEPTIONIST')" th:href="@{/patients/{id}/edit(id=${patient.id})}" class="btn btn-primary">
                 <i class="bi bi-pencil-square me-1"></i> Edit Details
             </a>
-            <button type="button" class="btn btn-outline-danger"
+            <button sec:authorize="hasRole('ADMIN')" type="button" class="btn btn-outline-danger"
                     th:data-patient-id="${patient.id}"
                     th:data-patient-name="${patient.fullName}"
                     onclick="confirmDelete(this.getAttribute('data-patient-id'), this.getAttribute('data-patient-name'))">
@@ -131,15 +131,21 @@
                     </h5>
                 </div>
                 <div class="card-body pt-0">
-                    <div th:if="${patient.medicalHistory != null and patient.medicalHistory != ''}"
-                         class="p-3 bg-light rounded border text-dark"
-                         style="white-space: pre-wrap;"
-                         th:text="${patient.medicalHistory}">
-                        Patient has allergy to penicillin.
+                    <div sec:authorize="hasRole('BILLING_STAFF')" class="p-3 bg-light rounded text-muted fst-italic">
+                        <i class="bi bi-shield-lock me-1 text-secondary"></i>
+                        Clinical medical history is restricted to clinical care personnel and administrators.
                     </div>
-                    <div th:unless="${patient.medicalHistory != null and patient.medicalHistory != ''}"
-                         class="p-3 bg-light rounded text-muted fst-italic">
-                        No prior medical conditions or allergies recorded.
+                    <div sec:authorize="!hasRole('BILLING_STAFF')">
+                        <div th:if="${patient.medicalHistory != null and patient.medicalHistory != ''}"
+                             class="p-3 bg-light rounded border text-dark"
+                             style="white-space: pre-wrap;"
+                             th:text="${patient.medicalHistory}">
+                            Patient has allergy to penicillin.
+                        </div>
+                        <div th:unless="${patient.medicalHistory != null and patient.medicalHistory != ''}"
+                             class="p-3 bg-light rounded text-muted fst-italic">
+                            No prior medical conditions or allergies recorded.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -167,6 +173,7 @@
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form id="deleteForm" method="post" action="">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash-fill me-1"></i>Yes, Delete Patient
                     </button>

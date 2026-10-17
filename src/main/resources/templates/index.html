@@ -70,28 +70,15 @@
             </div>
         </div>
 
-        <!-- Today's Appointments -->
+        <!-- Total Appointments -->
         <div class="col-12 col-sm-6 col-xl-4">
             <div class="stat-card card-appts">
                 <div class="stat-icon icon-appts">
                     <i class="bi bi-calendar-check-fill"></i>
                 </div>
                 <div class="stat-info">
-                    <h3 th:text="${todayAppointments}">0</h3>
-                    <p>Today's Appointments</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Available Beds -->
-        <div class="col-12 col-sm-6 col-xl-4">
-            <div class="stat-card card-beds-avail">
-                <div class="stat-icon icon-beds-avail">
-                    <i class="bi bi-door-open-fill"></i>
-                </div>
-                <div class="stat-info">
-                    <h3 th:text="${availableBeds}">0</h3>
-                    <p>Available Beds</p>
+                    <h3 th:text="${totalAppointments}">0</h3>
+                    <p>Appointments <span class="text-muted fw-normal" th:text="'(' + ${todayAppointments} + ' today)'"></span></p>
                 </div>
             </div>
         </div>
@@ -104,7 +91,7 @@
                 </div>
                 <div class="stat-info">
                     <h3 th:text="${occupiedBeds}">0</h3>
-                    <p>Occupied Beds</p>
+                    <p>Occupied Beds <span class="text-muted fw-normal" th:text="'(' + ${availableBeds} + ' available)'"></span></p>
                 </div>
             </div>
         </div>
@@ -118,6 +105,19 @@
                 <div class="stat-info">
                     <h3 th:text="${pendingBills}">0</h3>
                     <p>Pending Bills</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Payments -->
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="stat-card card-payments">
+                <div class="stat-icon icon-payments">
+                    <i class="bi bi-credit-card-fill"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 th:text="'₹' + ${#numbers.formatDecimal(totalCollectedAmount, 1, 2)}">₹0.00</h3>
+                    <p>Total Payments <span class="text-muted fw-normal" th:text="'(' + ${totalPaymentsCount} + ' txn)'"></span></p>
                 </div>
             </div>
         </div>
@@ -179,6 +179,11 @@
         <div class="col-auto">
             <a th:href="@{/bills/new}" class="btn btn-danger">
                 <i class="bi bi-receipt"></i> Generate Bill
+            </a>
+        </div>
+        <div class="col-auto">
+            <a th:href="@{/reports}" class="btn btn-outline-dark">
+                <i class="bi bi-bar-chart-line"></i> View Reports
             </a>
         </div>
     </div>

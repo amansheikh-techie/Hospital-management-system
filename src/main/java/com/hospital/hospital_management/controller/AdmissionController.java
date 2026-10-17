@@ -8,6 +8,7 @@ import com.hospital.hospital_management.service.DoctorService;
 import com.hospital.hospital_management.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +43,7 @@ public class AdmissionController {
      * Lists patient admissions with filter by patient name, ward, and status.
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'BILLING_STAFF')")
     public String listAdmissions(@RequestParam(value = "patientName", required = false) String patientName,
                                  @RequestParam(value = "status", required = false) AdmissionStatus status,
                                  @RequestParam(value = "ward", required = false) String ward,
@@ -64,6 +66,7 @@ public class AdmissionController {
      * Displays form to admit a patient to an available bed.
      */
     @GetMapping("/new")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public String showAdmissionForm(@RequestParam(value = "patientId", required = false) Long patientId,
                                     @RequestParam(value = "bedId", required = false) Long bedId,
                                     Model model) {
@@ -83,6 +86,7 @@ public class AdmissionController {
      * Processes admission creation with locking and status updates.
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public String admitPatient(@RequestParam(value = "patientId", required = false) Long patientId,
                                @RequestParam(value = "bedId", required = false) Long bedId,
                                @RequestParam(value = "doctorId", required = false) Long doctorId,
@@ -120,6 +124,7 @@ public class AdmissionController {
      * Views admission details including bed, patient, and discharge history.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'BILLING_STAFF')")
     public String viewAdmission(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Admission> admissionOpt = admissionService.getAdmissionById(id);
         if (admissionOpt.isEmpty()) {
@@ -136,6 +141,7 @@ public class AdmissionController {
      * Shows discharge form.
      */
     @GetMapping("/{id}/discharge")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public String showDischargeForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Admission> admissionOpt = admissionService.getAdmissionById(id);
         if (admissionOpt.isEmpty()) {
@@ -161,6 +167,7 @@ public class AdmissionController {
      * Handles discharge processing.
      */
     @PostMapping("/{id}/discharge")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public String dischargePatient(@PathVariable("id") Long id,
                                    @RequestParam(value = "dischargeDate", required = false)
                                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dischargeDate,

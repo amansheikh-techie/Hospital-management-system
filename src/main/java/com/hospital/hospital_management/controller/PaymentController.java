@@ -5,6 +5,7 @@ import com.hospital.hospital_management.model.Payment;
 import com.hospital.hospital_management.model.PaymentMethod;
 import com.hospital.hospital_management.service.BillingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,7 @@ public class PaymentController {
      * Lists all recorded payments in reverse chronological order.
      */
     @GetMapping("/payments")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
     public String listPayments(Model model) {
         List<Payment> payments = billingService.getAllPayments();
         model.addAttribute("payments", payments);
@@ -40,6 +42,7 @@ public class PaymentController {
      * Shows payment entry form for a specific bill.
      */
     @GetMapping("/bills/{id}/pay")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
     public String showPaymentForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Bill> billOpt = billingService.getBillById(id);
         if (billOpt.isEmpty()) {
@@ -64,6 +67,7 @@ public class PaymentController {
      * Records a payment against an invoice.
      */
     @PostMapping("/bills/{id}/pay")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
     public String processPayment(@PathVariable("id") Long id,
                                  @RequestParam("amount") BigDecimal amount,
                                  @RequestParam("paymentMethod") PaymentMethod paymentMethod,
@@ -85,6 +89,7 @@ public class PaymentController {
      * Views an individual payment transaction receipt.
      */
     @GetMapping("/payments/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'BILLING_STAFF')")
     public String viewPayment(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Payment> paymentOpt = billingService.getPaymentById(id);
         if (paymentOpt.isEmpty()) {

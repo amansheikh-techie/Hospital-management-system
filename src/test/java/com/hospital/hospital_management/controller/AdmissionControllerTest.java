@@ -15,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -68,7 +70,7 @@ class AdmissionControllerTest {
 
     @Test
     void testListAdmissionsPageLoads() throws Exception {
-        mockMvc.perform(get("/admissions"))
+        mockMvc.perform(get("/admissions").with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admission/list"))
                 .andExpect(model().attributeExists("admissions"))
@@ -78,7 +80,7 @@ class AdmissionControllerTest {
 
     @Test
     void testSearchAndFilterAdmissions() throws Exception {
-        mockMvc.perform(get("/admissions")
+        mockMvc.perform(get("/admissions").with(user("receptionist").roles("RECEPTIONIST"))
                         .param("status", "ACTIVE")
                         .param("ward", "Surgical Ward"))
                 .andExpect(status().isOk())
@@ -88,7 +90,7 @@ class AdmissionControllerTest {
 
     @Test
     void testShowAdmissionForm() throws Exception {
-        mockMvc.perform(get("/admissions/new"))
+        mockMvc.perform(get("/admissions/new").with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admission/form"))
                 .andExpect(model().attributeExists("patients"))
@@ -104,7 +106,7 @@ class AdmissionControllerTest {
         Bed newBed = bedService.createBed(new Bed("FREE-" + ts, "General Ward", BedType.GENERAL, "1st",
                 new BigDecimal("400.00"), ""));
 
-        mockMvc.perform(post("/admissions")
+        mockMvc.perform(post("/admissions").with(user("receptionist").roles("RECEPTIONIST")).with(csrf())
                         .param("patientId", newPatient.getId().toString())
                         .param("bedId", newBed.getId().toString())
                         .param("doctorId", savedDoctorId.toString())
@@ -116,7 +118,7 @@ class AdmissionControllerTest {
 
     @Test
     void testAdmitPatientMissingFieldsRejection() throws Exception {
-        mockMvc.perform(post("/admissions")
+        mockMvc.perform(post("/admissions").with(user("receptionist").roles("RECEPTIONIST")).with(csrf())
                         .param("admissionReason", "Incomplete submission"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admission/form"))
@@ -125,7 +127,7 @@ class AdmissionControllerTest {
 
     @Test
     void testViewAdmissionDetails() throws Exception {
-        mockMvc.perform(get("/admissions/{id}", savedAdmissionId))
+        mockMvc.perform(get("/admissions/{id}", savedAdmissionId).with(user("doctor").roles("DOCTOR")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admission/view"))
                 .andExpect(model().attributeExists("admission"));
@@ -133,7 +135,7 @@ class AdmissionControllerTest {
 
     @Test
     void testViewAdmissionNotFound() throws Exception {
-        mockMvc.perform(get("/admissions/{id}", 999999L))
+        mockMvc.perform(get("/admissions/{id}", 999999L).with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admissions"))
                 .andExpect(flash().attributeExists("errorMessage"));
@@ -141,7 +143,7 @@ class AdmissionControllerTest {
 
     @Test
     void testShowDischargeForm() throws Exception {
-        mockMvc.perform(get("/admissions/{id}/discharge", savedAdmissionId))
+        mockMvc.perform(get("/admissions/{id}/discharge", savedAdmissionId).with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admission/discharge"))
                 .andExpect(model().attributeExists("admission"))
@@ -150,7 +152,7 @@ class AdmissionControllerTest {
 
     @Test
     void testDischargePatientSuccess() throws Exception {
-        mockMvc.perform(post("/admissions/{id}/discharge", savedAdmissionId)
+        mockMvc.perform(post("/admissions/{id}/discharge", savedAdmissionId).with(user("receptionist").roles("RECEPTIONIST")).with(csrf())
                         .param("dischargeDate", LocalDateTime.now().toString())
                         .param("dischargeNotes", "Successfully discharged with full recovery."))
                 .andExpect(status().is3xxRedirection())
@@ -164,11 +166,33 @@ class AdmissionControllerTest {
         admissionService.dischargePatient(savedAdmissionId, LocalDateTime.now(), "Discharged");
 
         // Attempt discharging again
-        mockMvc.perform(post("/admissions/{id}/discharge", savedAdmissionId)
+        mockMvc.perform(post("/admissions/{id}/discharge", savedAdmissionId).with(user("receptionist").roles("RECEPTIONIST")).with(csrf())
                         .param("dischargeDate", LocalDateTime.now().toString())
                         .param("dischargeNotes", "Duplicate discharge attempt"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admission/discharge"))
                 .andExpect(model().attributeExists("errorMessage"));
+    }
+
+    // --- Negative Authorization Tests ---
+
+    @Test
+    void testUnauthenticatedUserRedirectedToLogin() throws Exception {
+        mockMvc.perform(get("/admissions"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void testBillingStaffCannotAccessAdmissionForm() throws Exception {
+        mockMvc.perform(get("/admissions/new").with(user("billing").roles("BILLING_STAFF")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testBillingStaffCannotAdmitPatient() throws Exception {
+        mockMvc.perform(post("/admissions").with(user("billing").roles("BILLING_STAFF")).with(csrf())
+                        .param("admissionReason", "Attempt"))
+                .andExpect(status().isForbidden());
     }
 }

@@ -15,6 +15,14 @@
     --dark:           #212529;
     --light:          #f8f9fa;
     --white:          #ffffff;
+    --color-gray-100: #f1f5f9;
+    --color-gray-200: #e2e8f0;
+    --color-gray-300: #cbd5e1;
+    --color-gray-400: #94a3b8;
+    --color-gray-500: #64748b;
+    --color-gray-600: #475569;
+    --color-gray-700: #334155;
+    --color-gray-800: #1e293b;
     --sidebar-width:  260px;
     --sidebar-bg:     #1e293b;
     --sidebar-hover:  #334155;
@@ -225,6 +233,7 @@ img { max-width: 100%; }
 .stat-card.card-beds-avail { border-left-color: #22c55e; }
 .stat-card.card-beds-occup { border-left-color: var(--warning); }
 .stat-card.card-bills      { border-left-color: var(--danger); }
+.stat-card.card-payments   { border-left-color: #0d9488; }
 
 .icon-patients   { background: var(--primary-light); color: var(--primary); }
 .icon-doctors    { background: #d1fae5; color: var(--success); }
@@ -232,6 +241,7 @@ img { max-width: 100%; }
 .icon-beds-avail { background: #dcfce7; color: #15803d; }
 .icon-beds-occup { background: #fef9c3; color: #a16207; }
 .icon-bills      { background: #fee2e2; color: var(--danger); }
+.icon-payments   { background: #ccfbf1; color: #0f766e; }
 
 /* ---------- Quick-Actions Section ---------- */
 .quick-actions .btn {
@@ -339,5 +349,24 @@ img { max-width: 100%; }
 
 .breadcrumb-item + .breadcrumb-item::before {
     color: var(--color-gray-400);
+}
+
+/* ---------- Print Styles ---------- */
+@media print {
+    .sidebar, .topbar, .sidebar-overlay, .btn, .card-header button, form, .nav-pills {
+        display: none !important;
+    }
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        animation: none !important;
+    }
+    body {
+        background: #ffffff !important;
+    }
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+    }
 }
 

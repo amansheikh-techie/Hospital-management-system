@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collections;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -78,7 +80,7 @@ class BillControllerTest {
 
     @Test
     void testListBillsPageLoads() throws Exception {
-        mockMvc.perform(get("/bills"))
+        mockMvc.perform(get("/bills").with(user("billing").roles("BILLING_STAFF")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("billing/list"))
                 .andExpect(model().attributeExists("bills"))
@@ -90,7 +92,7 @@ class BillControllerTest {
 
     @Test
     void testFilterBillsByStatus() throws Exception {
-        mockMvc.perform(get("/bills").param("status", "UNPAID"))
+        mockMvc.perform(get("/bills").with(user("billing").roles("BILLING_STAFF")).param("status", "UNPAID"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("billing/list"))
                 .andExpect(model().attributeExists("bills"));
@@ -98,7 +100,7 @@ class BillControllerTest {
 
     @Test
     void testShowCreateBillForm() throws Exception {
-        mockMvc.perform(get("/bills/new").param("patientId", savedPatientId.toString()))
+        mockMvc.perform(get("/bills/new").with(user("billing").roles("BILLING_STAFF")).param("patientId", savedPatientId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("billing/form"))
                 .andExpect(model().attributeExists("patients"));
@@ -106,7 +108,7 @@ class BillControllerTest {
 
     @Test
     void testCreateManualBillSuccess() throws Exception {
-        mockMvc.perform(post("/bills")
+        mockMvc.perform(post("/bills").with(user("billing").roles("BILLING_STAFF")).with(csrf())
                         .param("patientId", savedPatientId.toString())
                         .param("itemDescriptions", "Diagnostic Lab Tests", "Prescription Drugs")
                         .param("itemQuantities", "1", "2")
@@ -120,7 +122,7 @@ class BillControllerTest {
 
     @Test
     void testCreateManualBillValidationFailure() throws Exception {
-        mockMvc.perform(post("/bills")
+        mockMvc.perform(post("/bills").with(user("billing").roles("BILLING_STAFF")).with(csrf())
                         .param("itemDescriptions", ""))
                 .andExpect(status().isOk())
                 .andExpect(view().name("billing/form"))
@@ -129,7 +131,7 @@ class BillControllerTest {
 
     @Test
     void testGenerateFromAppointmentSuccess() throws Exception {
-        mockMvc.perform(post("/bills/from-appointment")
+        mockMvc.perform(post("/bills/from-appointment").with(user("billing").roles("BILLING_STAFF")).with(csrf())
                         .param("appointmentId", savedAppointmentId.toString())
                         .param("discountAmount", "0.00")
                         .param("taxAmount", "0.00")
@@ -140,7 +142,7 @@ class BillControllerTest {
 
     @Test
     void testGenerateFromAdmissionSuccess() throws Exception {
-        mockMvc.perform(post("/bills/from-admission")
+        mockMvc.perform(post("/bills/from-admission").with(user("billing").roles("BILLING_STAFF")).with(csrf())
                         .param("admissionId", savedAdmissionId.toString())
                         .param("discountAmount", "100.00")
                         .param("taxAmount", "0.00")
@@ -151,7 +153,7 @@ class BillControllerTest {
 
     @Test
     void testViewBillDetails() throws Exception {
-        mockMvc.perform(get("/bills/{id}", savedBillId))
+        mockMvc.perform(get("/bills/{id}", savedBillId).with(user("doctor").roles("DOCTOR")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("billing/view"))
                 .andExpect(model().attributeExists("bill"))
@@ -160,7 +162,7 @@ class BillControllerTest {
 
     @Test
     void testViewBillNotFound() throws Exception {
-        mockMvc.perform(get("/bills/{id}", 999999L))
+        mockMvc.perform(get("/bills/{id}", 999999L).with(user("billing").roles("BILLING_STAFF")))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/bills"))
                 .andExpect(flash().attributeExists("errorMessage"));
@@ -168,9 +170,31 @@ class BillControllerTest {
 
     @Test
     void testPrintBillReceipt() throws Exception {
-        mockMvc.perform(get("/bills/{id}/print", savedBillId))
+        mockMvc.perform(get("/bills/{id}/print", savedBillId).with(user("doctor").roles("DOCTOR")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("billing/print"))
                 .andExpect(model().attributeExists("bill"));
+    }
+
+    // --- Negative Authorization Tests ---
+
+    @Test
+    void testUnauthenticatedUserRedirectedToLogin() throws Exception {
+        mockMvc.perform(get("/bills"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void testReceptionistCannotAccessCreateBillForm() throws Exception {
+        mockMvc.perform(get("/bills/new").with(user("receptionist").roles("RECEPTIONIST")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testDoctorCannotCreateBill() throws Exception {
+        mockMvc.perform(post("/bills").with(user("doctor").roles("DOCTOR")).with(csrf())
+                        .param("patientId", savedPatientId.toString()))
+                .andExpect(status().isForbidden());
     }
 }

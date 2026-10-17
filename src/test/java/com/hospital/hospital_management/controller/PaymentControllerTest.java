@@ -13,6 +13,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.Collections;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -51,7 +53,7 @@ class PaymentControllerTest {
 
     @Test
     void testListPaymentsPageLoads() throws Exception {
-        mockMvc.perform(get("/payments"))
+        mockMvc.perform(get("/payments").with(user("billing").roles("BILLING_STAFF")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("billing/payment-list"))
                 .andExpect(model().attributeExists("payments"))
@@ -60,7 +62,7 @@ class PaymentControllerTest {
 
     @Test
     void testShowPaymentForm() throws Exception {
-        mockMvc.perform(get("/bills/{id}/pay", savedBillId))
+        mockMvc.perform(get("/bills/{id}/pay", savedBillId).with(user("billing").roles("BILLING_STAFF")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("billing/payment-form"))
                 .andExpect(model().attributeExists("bill"))
@@ -69,7 +71,7 @@ class PaymentControllerTest {
 
     @Test
     void testProcessPaymentSuccess() throws Exception {
-        mockMvc.perform(post("/bills/{id}/pay", savedBillId)
+        mockMvc.perform(post("/bills/{id}/pay", savedBillId).with(user("billing").roles("BILLING_STAFF")).with(csrf())
                         .param("amount", "500.00")
                         .param("paymentMethod", "CARD")
                         .param("transactionReference", "CARD-" + System.currentTimeMillis())
@@ -81,7 +83,7 @@ class PaymentControllerTest {
 
     @Test
     void testProcessPaymentExceedsBalanceRejection() throws Exception {
-        mockMvc.perform(post("/bills/{id}/pay", savedBillId)
+        mockMvc.perform(post("/bills/{id}/pay", savedBillId).with(user("billing").roles("BILLING_STAFF")).with(csrf())
                         .param("amount", "9999.00")
                         .param("paymentMethod", "CASH"))
                 .andExpect(status().is3xxRedirection())
@@ -96,7 +98,7 @@ class PaymentControllerTest {
                 PaymentMethod.UPI, existingRef, "First payment with ref");
 
         // Attempt second payment with the same transaction reference
-        mockMvc.perform(post("/bills/{id}/pay", savedBillId)
+        mockMvc.perform(post("/bills/{id}/pay", savedBillId).with(user("billing").roles("BILLING_STAFF")).with(csrf())
                         .param("amount", "50.00")
                         .param("paymentMethod", "UPI")
                         .param("transactionReference", existingRef))
@@ -107,7 +109,7 @@ class PaymentControllerTest {
 
     @Test
     void testViewPaymentDetails() throws Exception {
-        mockMvc.perform(get("/payments/{id}", savedPaymentId))
+        mockMvc.perform(get("/payments/{id}", savedPaymentId).with(user("billing").roles("BILLING_STAFF")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("billing/payment-view"))
                 .andExpect(model().attributeExists("payment"));
@@ -115,9 +117,32 @@ class PaymentControllerTest {
 
     @Test
     void testViewPaymentNotFound() throws Exception {
-        mockMvc.perform(get("/payments/{id}", 999999L))
+        mockMvc.perform(get("/payments/{id}", 999999L).with(user("billing").roles("BILLING_STAFF")))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/payments"))
                 .andExpect(flash().attributeExists("errorMessage"));
+    }
+
+    // --- Negative Authorization Tests ---
+
+    @Test
+    void testUnauthenticatedUserRedirectedToLogin() throws Exception {
+        mockMvc.perform(get("/payments"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void testReceptionistCannotAccessPayments() throws Exception {
+        mockMvc.perform(get("/payments").with(user("receptionist").roles("RECEPTIONIST")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testDoctorCannotProcessPayment() throws Exception {
+        mockMvc.perform(post("/bills/{id}/pay", savedBillId).with(user("doctor").roles("DOCTOR")).with(csrf())
+                        .param("amount", "100.00")
+                        .param("paymentMethod", "CASH"))
+                .andExpect(status().isForbidden());
     }
 }

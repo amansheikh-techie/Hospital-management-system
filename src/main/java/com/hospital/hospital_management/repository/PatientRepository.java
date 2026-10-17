@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -30,4 +31,19 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
      * Order patients by registration date / ID descending for newest first.
      */
     List<Patient> findAllByOrderByIdDesc();
+
+    /**
+     * Report query with date range, blood group, and gender filtering.
+     */
+    @Query("SELECT p FROM Patient p WHERE " +
+           "(:startDate IS NULL OR p.registrationDate >= :startDate) AND " +
+           "(:endDate IS NULL OR p.registrationDate <= :endDate) AND " +
+           "(:bloodGroup IS NULL OR :bloodGroup = '' OR p.bloodGroup = :bloodGroup) AND " +
+           "(:gender IS NULL OR :gender = '' OR p.gender = :gender) " +
+           "ORDER BY p.registrationDate DESC, p.id DESC")
+    List<Patient> findPatientsForReport(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("bloodGroup") String bloodGroup,
+            @Param("gender") String gender);
 }

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<div th:fragment="report-tabs (activeTab)" class="mb-4">
+    <ul class="nav nav-pills gap-2 bg-light p-2 rounded-3 border">
+        <li class="nav-item">
+            <a class="nav-link fw-semibold d-inline-flex align-items-center gap-2"
+               th:classappend="${activeTab == 'appointments'} ? 'active bg-primary text-white shadow-sm' : 'text-secondary'"
+               th:href="@{/reports/appointments}">
+                <i class="bi bi-calendar-check"></i> Appointments
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link fw-semibold d-inline-flex align-items-center gap-2"
+               th:classappend="${activeTab == 'patients'} ? 'active bg-primary text-white shadow-sm' : 'text-secondary'"
+               th:href="@{/reports/patients}">
+                <i class="bi bi-people"></i> Patients
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link fw-semibold d-inline-flex align-items-center gap-2"
+               th:classappend="${activeTab == 'beds'} ? 'active bg-primary text-white shadow-sm' : 'text-secondary'"
+               th:href="@{/reports/beds}">
+                <i class="bi bi-door-open"></i> Bed Occupancy
+            </a>
+        </li>
+        <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'BILLING_STAFF')">
+            <a class="nav-link fw-semibold d-inline-flex align-items-center gap-2"
+               th:classappend="${activeTab == 'financial'} ? 'active bg-primary text-white shadow-sm' : 'text-secondary'"
+               th:href="@{/reports/financial}">
+                <i class="bi bi-cash-stack"></i> Revenue &amp; Payments
+            </a>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>

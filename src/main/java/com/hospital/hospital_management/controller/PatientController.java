@@ -4,6 +4,7 @@ import com.hospital.hospital_management.model.Patient;
 import com.hospital.hospital_management.service.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -31,6 +32,7 @@ public class PatientController {
      * Display list of all patients with optional search filtering.
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'DOCTOR', 'BILLING_STAFF')")
     public String listPatients(@RequestParam(value = "keyword", required = false) String keyword, Model model) {
         List<Patient> patients;
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -41,6 +43,7 @@ public class PatientController {
         }
         model.addAttribute("patients", patients);
         model.addAttribute("totalCount", patientService.getTotalPatientCount());
+        model.addAttribute("pageTitle", "Patients");
         return "patient/list";
     }
 
@@ -48,6 +51,7 @@ public class PatientController {
      * Show registration form for a new patient.
      */
     @GetMapping("/new")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public String showRegistrationForm(Model model) {
         model.addAttribute("patient", new Patient());
         model.addAttribute("pageTitle", "Register New Patient");
@@ -58,6 +62,7 @@ public class PatientController {
      * Process new patient registration.
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public String registerPatient(@Valid @ModelAttribute("patient") Patient patient,
                                   BindingResult result,
                                   Model model,
@@ -77,10 +82,12 @@ public class PatientController {
      * View complete details for a specific patient.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST', 'DOCTOR', 'BILLING_STAFF')")
     public String viewPatientDetails(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         return patientService.getPatientById(id)
                 .map(patient -> {
                     model.addAttribute("patient", patient);
+                    model.addAttribute("pageTitle", "Patient Profile");
                     return "patient/view";
                 })
                 .orElseGet(() -> {
@@ -93,6 +100,7 @@ public class PatientController {
      * Show form to edit an existing patient.
      */
     @GetMapping("/{id}/edit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public String showEditForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         return patientService.getPatientById(id)
                 .map(patient -> {
@@ -110,6 +118,7 @@ public class PatientController {
      * Process patient update submission.
      */
     @PostMapping("/{id}/edit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
     public String updatePatient(@PathVariable("id") Long id,
                                 @Valid @ModelAttribute("patient") Patient patient,
                                 BindingResult result,
@@ -135,6 +144,7 @@ public class PatientController {
      * Delete a patient safely.
      */
     @PostMapping("/{id}/delete")
+    @PreAuthorize("hasRole('ADMIN')")
     public String deletePatient(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         boolean deleted = patientService.deletePatient(id);
         if (deleted) {

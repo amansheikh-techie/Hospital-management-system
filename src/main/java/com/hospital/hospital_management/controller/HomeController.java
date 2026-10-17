@@ -44,6 +44,7 @@ public class HomeController {
     public String index(Model model) {
         model.addAttribute("totalPatients", patientService.getTotalPatientCount());
         model.addAttribute("totalDoctors", doctorService.getTotalDoctorCount());
+        model.addAttribute("totalAppointments", appointmentService.getTotalAppointmentCount());
         model.addAttribute("todayAppointments", appointmentService.getTodayAppointmentCount());
         model.addAttribute("availableBeds", bedService.getAvailableBedCount());
         model.addAttribute("occupiedBeds", bedService.getOccupiedBedCount());
@@ -53,9 +54,11 @@ public class HomeController {
         model.addAttribute("todayAdmissions", admissionService.getTodayAdmissionCount());
         model.addAttribute("pendingBills", billingService.getUnpaidBillsCount() + billingService.getPartiallyPaidBillsCount());
         model.addAttribute("totalBills", billingService.getTotalBillsCount());
+        model.addAttribute("totalPaymentsCount", billingService.getTotalPaymentsCount());
         model.addAttribute("totalBilledAmount", billingService.getTotalBilledAmount());
         model.addAttribute("totalCollectedAmount", billingService.getTotalCollectedAmount());
         model.addAttribute("totalOutstandingBalance", billingService.getTotalOutstandingBalance());
         return "index";
     }
+
 }

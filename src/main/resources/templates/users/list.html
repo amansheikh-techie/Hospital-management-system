@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Staff Account Management – Hospital Management System</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Custom stylesheet -->
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+<!-- Sidebar & Topbar fragments -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="main-content">
+
+    <!-- Flash Messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMessage}">Operation completed successfully.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}">An error occurred.</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Header & Action Row -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h4 class="mb-1 text-dark fw-bold">
+                <i class="bi bi-person-gear text-primary me-2"></i>Staff Account Management
+            </h4>
+            <p class="text-muted small mb-0">
+                Manage registered hospital personnel, roles, and authentication credentials.
+            </p>
+        </div>
+        <div>
+            <a th:href="@{/users/new}" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm rounded-pill px-3">
+                <i class="bi bi-person-plus-fill"></i>
+                <span>Add Staff User</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3 py-3 text-secondary small fw-semibold">User</th>
+                            <th class="py-3 text-secondary small fw-semibold">Role</th>
+                            <th class="py-3 text-secondary small fw-semibold">Linked Doctor</th>
+                            <th class="py-3 text-secondary small fw-semibold">Status</th>
+                            <th class="py-3 text-secondary small fw-semibold">Created Date</th>
+                            <th class="pe-3 py-3 text-secondary small fw-semibold text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(users)}">
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-people display-6 d-block mb-2 text-secondary"></i>
+                                No staff accounts found.
+                            </td>
+                        </tr>
+
+                        <tr th:each="u : ${users}">
+                            <td class="ps-3 py-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center"
+                                         style="width: 36px; height: 36px;">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold text-dark d-block" th:text="${u.fullName}">Full Name</span>
+                                        <span class="text-muted small">@<span th:text="${u.username}">username</span></span>
+                                        <span th:if="${u.email}" class="text-muted small ms-1">&bull; <span th:text="${u.email}">email</span></span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span th:if="${u.role.name() == 'ROLE_ADMIN'}" class="badge bg-danger rounded-pill px-2">ADMIN</span>
+                                <span th:if="${u.role.name() == 'ROLE_DOCTOR'}" class="badge bg-primary rounded-pill px-2">DOCTOR</span>
+                                <span th:if="${u.role.name() == 'ROLE_RECEPTIONIST'}" class="badge bg-info text-dark rounded-pill px-2">RECEPTIONIST</span>
+                                <span th:if="${u.role.name() == 'ROLE_BILLING_STAFF'}" class="badge bg-success rounded-pill px-2">BILLING STAFF</span>
+                            </td>
+                            <td>
+                                <span th:if="${u.doctor != null}" class="text-dark small">
+                                    <i class="bi bi-person-badge text-primary me-1"></i>
+                                    Dr. <span th:text="${u.doctor.firstName + ' ' + u.doctor.lastName}">Doctor Name</span>
+                                </span>
+                                <span th:if="${u.doctor == null}" class="text-muted small">&mdash;</span>
+                            </td>
+                            <td>
+                                <span th:if="${u.enabled}" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2">
+                                    <i class="bi bi-check-circle me-1"></i>Active
+                                </span>
+                                <span th:unless="${u.enabled}" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2">
+                                    <i class="bi bi-dash-circle me-1"></i>Disabled
+                                </span>
+                            </td>
+                            <td class="text-muted small" th:text="${#temporals.format(u.createdAt, 'dd MMM yyyy, HH:mm')}">
+                                17 Oct 2026
+                            </td>
+                            <td class="pe-3 text-end">
+                                <div class="d-inline-flex gap-2">
+                                    <a th:href="@{/users/{id}/edit(id=${u.id})}" class="btn btn-sm btn-outline-secondary" title="Edit User">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form th:action="@{/users/{id}/toggle-status(id=${u.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm"
+                                                th:classappend="${u.enabled ? 'btn-outline-warning' : 'btn-outline-success'}"
+                                                th:title="${u.enabled ? 'Disable Account' : 'Enable Account'}">
+                                            <i th:class="${u.enabled ? 'bi bi-person-slash' : 'bi bi-person-check'}"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

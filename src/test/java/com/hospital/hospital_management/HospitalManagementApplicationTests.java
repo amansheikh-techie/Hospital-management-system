@@ -6,10 +6,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 
 /**
  * Basic integration tests for the Hospital Management System.
@@ -30,17 +32,26 @@ class HospitalManagementApplicationTests {
 	}
 
 	@Test
-	void dashboardPageLoads() throws Exception {
+	void unauthenticatedAccessRedirectsToLogin() throws Exception {
 		mockMvc.perform(get("/"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/login"));
+	}
+
+	@Test
+	void dashboardPageLoadsForAuthenticatedUser() throws Exception {
+		mockMvc.perform(get("/").with(user("staffuser").roles("RECEPTIONIST")))
 				.andExpect(status().isOk())
 				.andExpect(view().name("index"))
 				.andExpect(model().attributeExists("totalPatients"))
 				.andExpect(model().attributeExists("totalDoctors"))
+				.andExpect(model().attributeExists("totalAppointments"))
 				.andExpect(model().attributeExists("todayAppointments"))
 				.andExpect(model().attributeExists("availableBeds"))
 				.andExpect(model().attributeExists("occupiedBeds"))
 				.andExpect(model().attributeExists("totalBeds"))
 				.andExpect(model().attributeExists("activeAdmissions"))
-				.andExpect(model().attributeExists("pendingBills"));
+				.andExpect(model().attributeExists("pendingBills"))
+				.andExpect(model().attributeExists("totalPaymentsCount"));
 	}
 }

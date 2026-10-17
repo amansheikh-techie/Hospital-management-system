@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In – Hospital Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0d3b66 0%, #1e3d59 50%, #17b978 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 1rem;
+        }
+        .login-card {
+            max-width: 420px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            border: none;
+        }
+        .login-header {
+            background: #0d3b66;
+            color: #ffffff;
+            padding: 2.25rem 2rem 1.75rem;
+            text-align: center;
+        }
+        .login-header .brand-icon {
+            font-size: 2.75rem;
+            color: #17b978;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+        .login-body {
+            padding: 2rem;
+        }
+        .form-floating label {
+            color: #6c757d;
+        }
+        .btn-signin {
+            background: #0d3b66;
+            border-color: #0d3b66;
+            color: #ffffff;
+            padding: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-signin:hover {
+            background: #17b978;
+            border-color: #17b978;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .role-hint {
+            background: #f8f9fa;
+            border-left: 3px solid #17b978;
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+            margin-top: 1.5rem;
+            color: #495057;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="login-header">
+        <i class="bi bi-hospital brand-icon"></i>
+        <h4 class="fw-bold mb-1">City Hospital</h4>
+        <p class="text-white-50 small mb-0">Management & Clinical Portal</p>
+    </div>
+
+    <div class="login-body">
+        <!-- Error Alert -->
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show d-flex align-items-center py-2" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <span th:text="${errorMessage}">Error message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Success Alert (e.g. on logout) -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show d-flex align-items-center py-2" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <span th:text="${successMessage}">Success message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="username" name="username" placeholder="Username" required autofocus>
+                <label for="username"><i class="bi bi-person me-1"></i> Username</label>
+            </div>
+
+            <div class="form-floating mb-4">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                <label for="password"><i class="bi bi-lock me-1"></i> Password</label>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-signin rounded-pill">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Portal
+                </button>
+            </div>
+        </form>
+
+        <div class="role-hint">
+            <i class="bi bi-info-circle me-1 text-primary"></i>
+            <strong>Authorized Staff Only:</strong> Please sign in with your role-assigned credentials (Administrator, Doctor, Receptionist, or Billing Staff).
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

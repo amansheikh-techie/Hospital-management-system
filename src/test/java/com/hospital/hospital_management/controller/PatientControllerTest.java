@@ -9,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -38,7 +40,7 @@ class PatientControllerTest {
 
     @Test
     void testListPatientsPageLoads() throws Exception {
-        mockMvc.perform(get("/patients"))
+        mockMvc.perform(get("/patients").with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("patient/list"))
                 .andExpect(model().attributeExists("patients"))
@@ -47,7 +49,7 @@ class PatientControllerTest {
 
     @Test
     void testSearchPatientsWithKeyword() throws Exception {
-        mockMvc.perform(get("/patients").param("keyword", "Priya"))
+        mockMvc.perform(get("/patients").with(user("receptionist").roles("RECEPTIONIST")).param("keyword", "Priya"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("patient/list"))
                 .andExpect(model().attributeExists("patients"))
@@ -56,7 +58,7 @@ class PatientControllerTest {
 
     @Test
     void testShowRegistrationForm() throws Exception {
-        mockMvc.perform(get("/patients/new"))
+        mockMvc.perform(get("/patients/new").with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("patient/form"))
                 .andExpect(model().attributeExists("patient"))
@@ -65,7 +67,7 @@ class PatientControllerTest {
 
     @Test
     void testRegisterPatientSuccessRedirects() throws Exception {
-        mockMvc.perform(post("/patients")
+        mockMvc.perform(post("/patients").with(user("receptionist").roles("RECEPTIONIST")).with(csrf())
                 .param("firstName", "Suresh")
                 .param("lastName", "Kumar")
                 .param("age", "35")
@@ -83,7 +85,7 @@ class PatientControllerTest {
     @Test
     void testRegisterPatientValidationFailureReturnsForm() throws Exception {
         // Missing required fields (firstName, lastName, phone format invalid)
-        mockMvc.perform(post("/patients")
+        mockMvc.perform(post("/patients").with(user("receptionist").roles("RECEPTIONIST")).with(csrf())
                 .param("firstName", "")
                 .param("lastName", "")
                 .param("age", "200")
@@ -95,7 +97,7 @@ class PatientControllerTest {
 
     @Test
     void testViewPatientDetails() throws Exception {
-        mockMvc.perform(get("/patients/" + savedPatientId))
+        mockMvc.perform(get("/patients/" + savedPatientId).with(user("doctor").roles("DOCTOR")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("patient/view"))
                 .andExpect(model().attributeExists("patient"));
@@ -103,7 +105,7 @@ class PatientControllerTest {
 
     @Test
     void testViewPatientNotFoundRedirects() throws Exception {
-        mockMvc.perform(get("/patients/99999"))
+        mockMvc.perform(get("/patients/99999").with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/patients"))
                 .andExpect(flash().attributeExists("errorMessage"));
@@ -111,7 +113,7 @@ class PatientControllerTest {
 
     @Test
     void testShowEditForm() throws Exception {
-        mockMvc.perform(get("/patients/" + savedPatientId + "/edit"))
+        mockMvc.perform(get("/patients/" + savedPatientId + "/edit").with(user("receptionist").roles("RECEPTIONIST")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("patient/form"))
                 .andExpect(model().attributeExists("patient"))
@@ -120,7 +122,7 @@ class PatientControllerTest {
 
     @Test
     void testUpdatePatientSuccessRedirects() throws Exception {
-        mockMvc.perform(post("/patients/" + savedPatientId + "/edit")
+        mockMvc.perform(post("/patients/" + savedPatientId + "/edit").with(user("receptionist").roles("RECEPTIONIST")).with(csrf())
                 .param("firstName", "Priya")
                 .param("lastName", "Shah")
                 .param("age", "25")
@@ -137,9 +139,38 @@ class PatientControllerTest {
 
     @Test
     void testDeletePatientRedirects() throws Exception {
-        mockMvc.perform(post("/patients/" + savedPatientId + "/delete"))
+        mockMvc.perform(post("/patients/" + savedPatientId + "/delete").with(user("admin").roles("ADMIN")).with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/patients"))
                 .andExpect(flash().attributeExists("successMessage"));
+    }
+
+    // --- Negative Authorization Tests ---
+
+    @Test
+    void testUnauthenticatedUserRedirectedToLogin() throws Exception {
+        mockMvc.perform(get("/patients"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void testBillingStaffCannotAccessPatientRegistrationForm() throws Exception {
+        mockMvc.perform(get("/patients/new").with(user("billing").roles("BILLING_STAFF")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testBillingStaffCannotRegisterPatient() throws Exception {
+        mockMvc.perform(post("/patients").with(user("billing").roles("BILLING_STAFF")).with(csrf())
+                .param("firstName", "Unauthorized")
+                .param("lastName", "Attempt"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testReceptionistCannotDeletePatient() throws Exception {
+        mockMvc.perform(post("/patients/" + savedPatientId + "/delete").with(user("receptionist").roles("RECEPTIONIST")).with(csrf()))
+                .andExpect(status().isForbidden());
     }
 }

@@ -7,6 +7,7 @@ import com.hospital.hospital_management.model.BedType;
 import com.hospital.hospital_management.service.BedService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -31,6 +32,7 @@ public class BedController {
      * Lists beds with search and filtering, plus live operational summary counters.
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'BILLING_STAFF')")
     public String listBeds(@RequestParam(value = "query", required = false) String query,
                            @RequestParam(value = "ward", required = false) String ward,
                            @RequestParam(value = "type", required = false) BedType type,
@@ -61,6 +63,7 @@ public class BedController {
      * Shows form to register a new bed.
      */
     @GetMapping("/new")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showCreateForm(Model model) {
         if (!model.containsAttribute("bed")) {
             model.addAttribute("bed", new Bed());
@@ -75,6 +78,7 @@ public class BedController {
      * Handles bed creation.
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public String createBed(@Valid @ModelAttribute("bed") Bed bed,
                             BindingResult result,
                             RedirectAttributes redirectAttributes,
@@ -104,6 +108,7 @@ public class BedController {
      * Shows details of a specific bed, including current active occupant and historical stays.
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'BILLING_STAFF')")
     public String viewBed(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Bed> bedOpt = bedService.getBedById(id);
         if (bedOpt.isEmpty()) {
@@ -126,6 +131,7 @@ public class BedController {
      * Shows edit form for an existing bed.
      */
     @GetMapping("/{id}/edit")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showEditForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         Optional<Bed> bedOpt = bedService.getBedById(id);
         if (bedOpt.isEmpty()) {
@@ -148,6 +154,7 @@ public class BedController {
      * Handles bed updates.
      */
     @PostMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String updateBed(@PathVariable("id") Long id,
                             @Valid @ModelAttribute("bed") Bed bed,
                             BindingResult result,
@@ -182,6 +189,7 @@ public class BedController {
      * Quick action to place an unoccupied bed under maintenance.
      */
     @PostMapping("/{id}/maintenance")
+    @PreAuthorize("hasRole('ADMIN')")
     public String setMaintenance(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             Bed bed = bedService.markUnderMaintenance(id);
@@ -197,6 +205,7 @@ public class BedController {
      * Quick action to return a maintenance bed back to AVAILABLE.
      */
     @PostMapping("/{id}/available")
+    @PreAuthorize("hasRole('ADMIN')")
     public String setAvailable(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             Bed bed = bedService.returnToAvailable(id);
@@ -212,6 +221,7 @@ public class BedController {
      * Safe deletion of a bed if no history exists.
      */
     @PostMapping("/{id}/delete")
+    @PreAuthorize("hasRole('ADMIN')")
     public String deleteBed(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             bedService.deleteBed(id);
