@@ -99,4 +99,18 @@ public class UserService {
     public Optional<User> getUserByUsername(String username) {
         return userRepository.findByUsername(username != null ? username.trim().toLowerCase() : "");
     }
+
+    public void resetPassword(String username, String newPassword) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username is required.");
+        }
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters long.");
+        }
+        User user = getUserByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("No account found with username: " + username.trim()));
+
+        user.setPassword(passwordEncoder.encode(newPassword.trim()));
+        userRepository.save(user);
+    }
 }

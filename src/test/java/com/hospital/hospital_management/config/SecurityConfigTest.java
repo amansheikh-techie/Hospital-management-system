@@ -103,4 +103,35 @@ class SecurityConfigTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("users/list"));
     }
+
+    @Test
+    void testForgotPasswordPageIsPubliclyAccessible() throws Exception {
+        mockMvc.perform(get("/forgot-password"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("auth/forgot-password"));
+    }
+
+    @Test
+    void testForgotPasswordWithWrongSecurityAnswerFails() throws Exception {
+        mockMvc.perform(post("/forgot-password").with(csrf())
+                        .param("username", "testadmin")
+                        .param("securityAnswer", "python")
+                        .param("newPassword", "NewPass123!")
+                        .param("confirmPassword", "NewPass123!"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("auth/forgot-password"))
+                .andExpect(model().attributeExists("errorMessage"));
+    }
+
+    @Test
+    void testForgotPasswordWithCorrectSecurityAnswerResetsPassword() throws Exception {
+        mockMvc.perform(post("/forgot-password").with(csrf())
+                        .param("username", "testadmin")
+                        .param("securityAnswer", "java")
+                        .param("newPassword", "ResetPass123!")
+                        .param("confirmPassword", "ResetPass123!"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"))
+                .andExpect(flash().attributeExists("successMessage"));
+    }
 }

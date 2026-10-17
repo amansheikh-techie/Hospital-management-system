@@ -46,7 +46,7 @@ A production-grade, full-stack Hospital Management System built with **Java 21**
    - Transaction reference tracking and balance settlement protection.
 
 9. **Authentication & Role-Based Access Control (RBAC)**:
-   - Form-based login/logout with BCrypt password hashing (strength 12) and CSRF protection.
+   - Form-based login/logout with BCrypt password hashing (strength 12), Forgot Password credential recovery, and CSRF protection.
    - Strict role matrix:
      - `ADMIN`: Full system administration, user management, and configuration.
      - `DOCTOR`: View patients, manage assigned appointments, and inspect bed status.

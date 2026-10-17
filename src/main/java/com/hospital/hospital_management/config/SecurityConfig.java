@@ -30,7 +30,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Static assets & public endpoints
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
-                .requestMatchers("/login", "/access-denied").permitAll()
+                .requestMatchers("/login", "/forgot-password", "/access-denied").permitAll()
 
                 // User Management (Admin only)
                 .requestMatchers("/users/**").hasRole("ADMIN")
