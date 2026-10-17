@@ -131,6 +131,34 @@ Default initial administrator username: `admin` (password set via `ADMIN_INITIAL
 
 ---
 
+## 🌐 Deploying on Render (with External MySQL)
+
+1. **Provision an External MySQL Database**:
+   - Create a MySQL 8.0+ database with your preferred cloud provider (e.g., Aiven, Clever Cloud, PlanetScale, Railway, or AWS RDS).
+   - Note down the host, port, database name, username, and password.
+
+2. **Create Web Service on Render**:
+   - Go to the [Render Dashboard](https://dashboard.render.com/) and select **New +** $\rightarrow$ **Web Service**.
+   - Connect your GitHub repository (`Hospital-management-system`).
+   - Select **Docker** as the language/runtime (Render automatically uses the project's root `Dockerfile`).
+   - Choose your preferred region and instance tier (Free / Starter).
+
+3. **Configure Environment Variables in Render**:
+   Under the **Environment** tab of your Render Web Service, add the following variables:
+
+   | Variable | Required | Description | Example |
+   | :--- | :---: | :--- | :--- |
+   | `DB_URL` | **Yes** | JDBC connection URL to your external MySQL database | `jdbc:mysql://<host>:<port>/<dbname>?useSSL=true&serverTimezone=UTC` |
+   | `DB_USERNAME` | **Yes** | Database username | `avnadmin` / `your_user` |
+   | `DB_PASSWORD` | **Yes** | Database password | `your_secure_password` |
+   | `ADMIN_INITIAL_PASSWORD` | **Yes** | Initial password for the seeded `admin` account | `AdminSecure2026!` |
+   | `DDL_AUTO` | Optional | Hibernate DDL strategy (defaults to `update`) | `update` |
+   | `THYMELEAF_CACHE` | Optional | Enable view caching in production (defaults to `false`) | `true` |
+
+   *(Note: Render automatically injects and manages the `PORT` variable).*
+
+---
+
 ## 🧪 Running Automated Tests
 
 Execute the complete test suite across all modules (runs in an isolated in-memory H2 environment; no live MySQL server required):
