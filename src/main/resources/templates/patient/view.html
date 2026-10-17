@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title th:text="'Patient Details – ' + ${patient.fullName}">Patient Details – Hospital Management System</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Custom stylesheet -->
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+</head>
+<body>
+
+<!-- Sidebar & Topbar fragments -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div th:replace="~{fragments/layout :: topbar}"></div>
+
+<main class="main-content">
+
+    <!-- Breadcrumb & Actions -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/patients}" class="text-decoration-none">Patients</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="'Patient #' + ${patient.id}">Details</li>
+                </ol>
+            </nav>
+            <h4 class="mb-0 text-dark fw-bold">
+                <i class="bi bi-person-badge-fill text-primary me-2"></i>Patient Profile
+            </h4>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/patients}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+            <a th:href="@{/patients/{id}/edit(id=${patient.id})}" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-1"></i> Edit Details
+            </a>
+            <button type="button" class="btn btn-outline-danger"
+                    th:data-patient-id="${patient.id}"
+                    th:data-patient-name="${patient.fullName}"
+                    onclick="confirmDelete(this.getAttribute('data-patient-id'), this.getAttribute('data-patient-name'))">
+                <i class="bi bi-trash me-1"></i> Delete
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Profile Card -->
+    <div class="row g-4">
+        <!-- Left Column: Patient Profile Overview -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm text-center p-4">
+                <div class="mx-auto mb-3 rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center"
+                     style="width: 90px; height: 90px; font-size: 2.5rem;">
+                    <i class="bi bi-person"></i>
+                </div>
+                <h4 class="fw-bold mb-1" th:text="${patient.fullName}">Patient Name</h4>
+                <p class="text-muted small mb-2">Patient ID: <span class="fw-semibold text-dark">#<span th:text="${patient.id}">1</span></span></p>
+
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fs-6"
+                          th:text="'Blood: ' + ${patient.bloodGroup}">O+</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fs-6"
+                          th:text="${patient.gender}">Male</span>
+                    <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle px-2 py-1 fs-6"
+                          th:text="${patient.age} + ' yrs'">30 yrs</span>
+                </div>
+
+                <hr class="my-3 opacity-25" />
+
+                <div class="text-start small">
+                    <div class="mb-2">
+                        <i class="bi bi-calendar-check text-primary me-2"></i>
+                        <span class="text-muted">Registered On:</span>
+                        <strong class="float-end" th:text="${#temporals.format(patient.registrationDate, 'dd-MMM-yyyy')}">17-Oct-2026</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Contact & Medical History -->
+        <div class="col-12 col-lg-8">
+            <!-- Contact Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 text-dark fw-bold">
+                        <i class="bi bi-telephone-inbound text-primary me-2"></i>Contact Information
+                    </h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <label class="text-muted small d-block">Phone Number</label>
+                            <span class="fs-6 fw-semibold text-dark">
+                                <i class="bi bi-telephone text-primary me-1"></i>
+                                <span th:text="${patient.contactNumber}">9876543210</span>
+                            </span>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="text-muted small d-block">Email Address</label>
+                            <span class="fs-6 text-dark">
+                                <i class="bi bi-envelope text-primary me-1"></i>
+                                <span th:if="${patient.email != null and patient.email != ''}" th:text="${patient.email}">patient@example.com</span>
+                                <span th:unless="${patient.email != null and patient.email != ''}" class="text-muted fst-italic">Not provided</span>
+                            </span>
+                        </div>
+                        <div class="col-12">
+                            <label class="text-muted small d-block">Residential Address</label>
+                            <span class="fs-6 text-dark">
+                                <i class="bi bi-geo-alt text-primary me-1"></i>
+                                <span th:text="${patient.address}">123 Main Street, City</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical History Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 text-dark fw-bold">
+                        <i class="bi bi-clipboard2-pulse text-danger me-2"></i>Medical History &amp; Allergies
+                    </h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div th:if="${patient.medicalHistory != null and patient.medicalHistory != ''}"
+                         class="p-3 bg-light rounded border text-dark"
+                         style="white-space: pre-wrap;"
+                         th:text="${patient.medicalHistory}">
+                        Patient has allergy to penicillin.
+                    </div>
+                    <div th:unless="${patient.medicalHistory != null and patient.medicalHistory != ''}"
+                         class="p-3 bg-light rounded text-muted fst-italic">
+                        No prior medical conditions or allergies recorded.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Patient Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-2">Are you sure you want to delete patient record <strong id="deletePatientName"></strong> (ID: <span id="deletePatientIdText"></span>)?</p>
+                <p class="text-danger small mb-0">
+                    <i class="bi bi-info-circle me-1"></i>This action removes the patient record from the database.
+                </p>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" action="">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill me-1"></i>Yes, Delete Patient
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+<div th:replace="~{fragments/layout :: clock-script}"></div>
+
+<script>
+function confirmDelete(patientId, patientName) {
+    document.getElementById('deletePatientName').textContent = patientName;
+    document.getElementById('deletePatientIdText').textContent = patientId;
+    document.getElementById('deleteForm').action = '/patients/' + patientId + '/delete';
+    var myModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    myModal.show();
+}
+</script>
+
+</body>
+</html>
