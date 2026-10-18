@@ -14,7 +14,8 @@ from selenium import webdriver
 from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
 
-OUTPUT_DIR = r"g:\Hospital_management\linkedin_screenshots"
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "screenshots")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ----------------------------------------------------------------------
@@ -40,26 +41,26 @@ def capture_web_screens():
         driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
         time.sleep(2)
 
-        # 01 - Dashboard
+        # Dashboard
         driver.get("http://localhost:8080/")
         time.sleep(1.5)
-        dash_path = os.path.join(OUTPUT_DIR, "01_dashboard.png")
+        dash_path = os.path.join(OUTPUT_DIR, "dashboard.png")
         driver.save_screenshot(dash_path)
-        print("  -> Saved 01_dashboard.png")
+        print("  -> Saved dashboard.png")
 
-        # 02 - Patient Management
+        # Patient Management
         driver.get("http://localhost:8080/patients")
         time.sleep(1.5)
-        patient_path = os.path.join(OUTPUT_DIR, "02_patient_management.png")
+        patient_path = os.path.join(OUTPUT_DIR, "patient-management.png")
         driver.save_screenshot(patient_path)
-        print("  -> Saved 02_patient_management.png")
+        print("  -> Saved patient-management.png")
 
-        # 03 - Appointments
+        # Appointments
         driver.get("http://localhost:8080/appointments")
         time.sleep(1.5)
-        appts_path = os.path.join(OUTPUT_DIR, "03_appointments.png")
+        appts_path = os.path.join(OUTPUT_DIR, "appointments.png")
         driver.save_screenshot(appts_path)
-        print("  -> Saved 03_appointments.png")
+        print("  -> Saved appointments.png")
 
     finally:
         driver.quit()
@@ -266,7 +267,7 @@ def capture_code_screens():
     code_examples = [
         {
             "id": "04_backend_controller",
-            "file": r"g:\Hospital_management\src\main\java\com\hospital\hospital_management\controller\AppointmentController.java",
+            "file": os.path.join(PROJECT_ROOT, "src", "main", "java", "com", "hospital", "hospital_management", "controller", "AppointmentController.java"),
             "display_path": "src > main > java > com > hospital > controller > AppointmentController.java",
             "filename": "AppointmentController.java",
             "start": 52,
@@ -274,7 +275,7 @@ def capture_code_screens():
         },
         {
             "id": "05_service_logic",
-            "file": r"g:\Hospital_management\src\main\java\com\hospital\hospital_management\service\AppointmentService.java",
+            "file": os.path.join(PROJECT_ROOT, "src", "main", "java", "com", "hospital", "hospital_management", "service", "AppointmentService.java"),
             "display_path": "src > main > java > com > hospital > service > AppointmentService.java",
             "filename": "AppointmentService.java",
             "start": 66,
@@ -282,7 +283,7 @@ def capture_code_screens():
         },
         {
             "id": "06_database_entity",
-            "file": r"g:\Hospital_management\src\main\java\com\hospital\hospital_management\model\Appointment.java",
+            "file": os.path.join(PROJECT_ROOT, "src", "main", "java", "com", "hospital", "hospital_management", "model", "Appointment.java"),
             "display_path": "src > main > java > com > hospital > model > Appointment.java",
             "filename": "Appointment.java",
             "start": 19,
@@ -290,7 +291,7 @@ def capture_code_screens():
         },
         {
             "id": "07_security_config",
-            "file": r"g:\Hospital_management\src\main\java\com\hospital\hospital_management\config\SecurityConfig.java",
+            "file": os.path.join(PROJECT_ROOT, "src", "main", "java", "com", "hospital", "hospital_management", "config", "SecurityConfig.java"),
             "display_path": "src > main > java > com > hospital > config > SecurityConfig.java",
             "filename": "SecurityConfig.java",
             "start": 27,
@@ -338,8 +339,8 @@ def capture_code_screens():
 def create_collage():
     print("[3/3] Creating natural student project showcase collage...")
 
-    img_dash = Image.open(os.path.join(OUTPUT_DIR, "01_dashboard.png"))
-    img_appts = Image.open(os.path.join(OUTPUT_DIR, "03_appointments.png"))
+    img_dash = Image.open(os.path.join(OUTPUT_DIR, "dashboard.png"))
+    img_appts = Image.open(os.path.join(OUTPUT_DIR, "appointments.png"))
     img_sec = Image.open(os.path.join(OUTPUT_DIR, "07_security_config.png"))
     img_svc = Image.open(os.path.join(OUTPUT_DIR, "05_service_logic.png"))
 
@@ -409,7 +410,7 @@ def create_collage():
     paste_card(c3, x1, y2, "03  \u2022  Spring Security 6  \u2022  Role-Based Access Control (RBAC)")
     paste_card(c4, x2, y2, "04  \u2022  Business Logic Service  \u2022  Schedule Conflict Prevention")
 
-    collage_path = os.path.join(OUTPUT_DIR, "08_project_showcase.png")
+    collage_path = os.path.join(OUTPUT_DIR, "project-showcase.png")
     canvas.save(collage_path, "PNG", quality=95)
     print(f"  -> Saved {collage_path}")
 
